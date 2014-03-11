@@ -1,0 +1,23 @@
+\section{Summary of Progress (February 2014)}
+%\section{Introduction}
+\label{sec_introduction}
+
+The main progress of our project in the past few months is to survey literature on the physical and
+MAC layer techniques for non-orthogonal multiple access (NOMA). Several research
+papers have been found and carefully studied~\cite{cite_docomo1, cite_docomo2, cite_docomo3,cite_bell1,cite_bell2}.
+In the following, we first briefly describe some of the papers surveyed, and then we organize our findings into
+{\em physical layer} and {\em MAC layer} aspects in Section~\ref{sec_phy} and
+Section~\ref{sec_mac} respectively.
+%The following provides a short summary of related information in these papers.
+
+%There are two different analysis of non-orthogonal multiple access (NOMA) and successive interference cancellation (SIC). One analyzes SIC from original Shannon capacity and anther start from modulation scheme and packet error rate (PER). The analysis starting from Shannon capacity is mainly proposed from DOCOMO Japan~\cite{cite_docomo1, cite_docomo2, cite_docomo3}. Another one from the aspect of modulation and PER is proposed from Bell Lab~\cite{cite_bell1,cite_bell2}.
+
+Briefly,
+in~\cite{cite_docomo1}, the authors compare the performance between orthogonal frequency-division multiple access (OFDMA) and NOMA. They in particular investigate successive interference cancellation (SIC) and state that SIC receivers should follow the rule that the optimal order for decoding is in the order of the increasing $\frac{|h|^2}{N}$. An NOMA/Multiple-Input Multiple-Output (MIMO) scheme is proposed to achieve further capacity gain. In~\cite{cite_docomo2}, the authors investigate the enhancement of the cell-edge user throughput by using SIC in  the cellular downlink. They propose an optimization method that can balance the throughput of cell-edge users and interior users. The work in~\cite{cite_docomo3} is the extension of~\cite{cite_docomo2}, where the authors investigate the use of FFR and weighted PF-based multi-user scheduling with SIC in the cellular downlink. They show that NOMA can help achieve user fairness.
+%The detailed description of related work from DOCOMO Japan will be given in Section~\ref{sec_phy} and Section~\ref{sec_mac}.
+%
+Related work in~\cite{cite_bell1} not only considers the ideal channel capacity but also analyzes SIC performance with respect to modulation schemes and packet error rate (PER). A resource allocation algorithm is proposed to leverage the spatial gain {\color{red}and the simulation results show that proposed algorithm using NOMA with SIC achieves more than 100 percent throughput gain comparing OFDMA. In~\cite{cite_bell2}, the authors investigate SIC and proposed an iterative SIC receiver architecture with combined pilot/date based channel estimation for efficient decoding of NOMA signals. The simulation results show iterative SIC receivers reach low PER with weak SNR under a reasonable complexity.}
+%the authors analyze the iterative SIC receiver structure and present simulation results of their receiver structure with respect to PER.
+%The simulation results are also given in the aspect of PER. %The detailed description is also in the following paragraphs.
+
+%In order to compare two different analysis, the following paragraphs are divided into two sections for different topics (PHY layer and MAC layer). The PHY layer in Section~\ref{sec_phy} shows the NOMA/SIC from two different aspects: starting from Shannon capacity and starting from modulation/PER. The MAC layer in Section~\ref{sec_mac} discusses resource allocation and scheduling problems. We make a conclusion in Section~\ref{sec_conclusion} and describe our future direction in Section~\ref{sec_futureWork}. 

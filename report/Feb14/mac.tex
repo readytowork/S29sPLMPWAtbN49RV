@@ -1,0 +1,150 @@
+\subsection{MAC Layer Aspects}
+\label{sec_mac}
+
+To leverage the benefits of NOMA, MAC layer techniques such as resource allocation, scheduling, and power control need to be
+properly redesigned for performance optimization. In the following, we describe two related work for allocating resources to
+NOMA users.
+%As described in previous section, the SNR of received signal can influence the capacity of user who uses NOMA with SIC, so the resource allocation, schedule, and power control are key factors. In Section~\ref{sec_dynamic_ra}, we introduce how to dynamically control trade-off between the maximum throughput and worst throughput in the cellular system. In Section~\ref{sec_S4}, one simple algorithm S4 for scheduling is also introduced.
+
+\subsubsection{Two-user resource allocation}
+\label{sec_S4}
+
+The authors in~\cite{cite_bell1} consider the problem of choosing the best pair of UEs for sharing each
+resource unit. An algorithm called variable multi-user resource allocation as shown in Algorithm~\ref{alg_S4} is proposed.
+%The term MU represents multiple users and SU represent single user.
+Specifically, UEs are sorted in the descending order of their channel gains. For each candidate UE, the algorithm first finds the other
+UE that can use the same resource based on the simulation model in Fig.~\ref{fig_NOMA_modulation}. The set of UEs that can pair with the candidate UE is obtained as group $\mathcal{A}$. Then, group  $\mathcal{B}$ is obtained from $\mathcal{A}$, where the multi-user data rate $R^{\text{(sic)}}_b(z)$ of the far user $z$ should reach at least half of its single-user data rate $R_b(y)$. Finally, group $\mathcal{C}$ is obtained from group $\mathcal{B}$ by the rule of fair scheduling. The algorithm allocates the resource to the pair $(x, y)$ whose sum rate is the highest in group $\mathcal{C}$.
+
+
+\begin{algorithm}[t]
+\caption{Variable multi-user resource allocation algorithm}
+\label{alg_S4}
+\begin{algorithmic}
+\State Sort users in descending order by their channel gains
+\For {each user $x$ in the sorted list}
+  \State $\mathcal{A}$ = $\{(x,y)| (x, y) \text{ both fulfill NOMA constraint with}$
+  \State $\text{~~~~~~$y$ being the far user\}}$
+  \State $\mathcal{B}$ = $\{(x,y)|~(x, y)~\in~\mathcal{A} \text{ and } R^{\text{(sic)}}_b(z)~\geq~\frac{1}{2}R_b(z)$,
+  \State $\text{~~~~~~where } z=\underset{i=x,y}{\arg\min} |h_{i}|^2\}$
+  \State $\mathcal{C}$ = $\{(x,y)| (x,y) \in \mathcal{B} \text{ and } y \text{ is less scheduled}\}$
+  \State Select $(x, y) \in \mathcal{C}$ that has the highest sum rate
+  \State Allocate one resource to $(x, y)$
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+
+\subsubsection{Multi-user resource allocation}
+\label{sec_dynamic_ra}
+
+In~\cite{cite_docomo2}, the authors investigate an optimization problem that can dynamically control the worst data rate and the maximum data rate in the cellular system. Ideally, the total user sum rate is maximized when each resource is assigned to a user with the highest signal-to-interference plus noise power ratio (SINR) among candidate users. Specifically, if there are $K$ users and $B$ resources, the maximum sum rate, $R_{\text{max}}$, can be represented as
+\begin{equation}
+\label{eq_sic_max}
+R_{\text{max}}=\sum_{b=1}^B W_b \log_2 \left(1+\frac{\max\limits_{k} \left(\frac{|h_{k, b}|^2}{N_{k, b}}\right) P_{k, b}}{BW_b} \right).
+\end{equation}
+Notice that base station can transmit maximum power $P/B$ per resource unit.
+
+Based on (\ref{eq_sic_shannon}) and (\ref{eq_sic_max}), the problem to maximize the worst user data rate with total rate constraint is written as
+\begin{equation}
+\label{eq_opt_fair}
+\begin{aligned}
+& \text{maximize}      & & \min_{k\in K} R^{(\text{sic})}(k) \\
+& \text{subject to}     & & P_{k,b} \geq 0, \forall k, b, \\
+&                              & & \sum_{k=1}^K P_{k,b}=P/B, \forall b, \\
+&                              & & \sum_{k=1}^K R^{(\text{sic})}(k) \geq \alpha R_{\text{max}},
+\end{aligned}
+\end{equation}
+where $R^{(\text{sic})}(k)=\sum_{b=1}^B R_b^{(\text{sic})}(k)$. The parameter $\alpha$ is adjustable, where a larger value of $\alpha$ favors the total user rates while a smaller value of $\alpha$ favors user fairness. For example, if $\alpha <1$, the base station does not need to fulfill the strict constraint of $R_{\text{max}}$ and can allocate resources to other users.
+
+Problem~(\ref{eq_opt_fair}) is not a convex optimization problem; therefore, the solution obtained using the interior-point method depends on the initial setting of parameters $P_{k,b}$. In view of (\ref{eq_sic_max}), the authors use the following for initial setting of $P_{k,b}$ in the evaluation:
+\begin{equation}
+\label{eq_initial_pkb}
+ P_{k,b} = \left\{
+  \begin{array}{l l}
+    \frac{P}{B}, & k=\underset{i}{\arg\max} \left(\frac{h_{i,b}}{N_{i,b}}\right)\\
+    0,     & \text{otherwise.}
+  \end{array} \right.
+\end{equation}
+Still, due to the complexity of the problem, the solution of (\ref{eq_opt_fair}) obtained by the interior point method through (\ref{eq_initial_pkb}) is local optimal but not global optimal. Further investigation on formulation and optimization of multi-user resource allocation is needed.
+
+
+
+
+% Quaterly additional part
+\subsection{Combination of FFR and PF schedule}
+\label{sec_ffr_pf}
+The study in~\cite{cite_docomo3} aims to let cell-edge users have better network experience 
+which is similar to the work in~\cite{cite_docomo2}. 
+They propose scheduling algorithm extends the concept of fractional frequency reuse (FFR) and 
+weighted proportional fair (PF)-based multiuser scheduling to nonorthogonal access with a 
+successive interference cancellation (SIC) in the cellular downlink. 
+
+A typical method, soft FFR, the overall system transmission bandwidth is divided into two parts: 
+a frequency band with priority given to cell-edge users ($\mathcal{B}_{\text{edge}}$) and that 
+with priority given to cell-interior users ($\mathcal{B}_{\text{inner}}$). The bandwidth for the
+edge band is assumed to be 1/3 of the overall system transmission bandwidth.
+
+The average user throughput of user k per frequency block is defined as
+\begin{equation}
+\label{eq_avg_throughput}
+T(k;t+1)=\left(1-\frac{1}{t_c}\right)T(k;t)+\frac{1}{t_c}\left(\frac{1}{B}\sum_{b=1}^{B} R^{\text{(sic)}}_b(k;t)\right),
+\end{equation}
+where $t$ denotes the time index and $t_c$ defines the time defines the time horizon in which we want
+to achieve fairness. Obviously, the larger $t_c$, the less stringent
+the fairness constraint, and thus longer delays start appearing
+between successive transmissions to the same user.
+
+In FFR, the scheduling metric is affected by the frequency block access policy. 
+The sets of users categorized into cell-edge and cell-interior user groups are denoted as 
+$\mathcal{K}_{\text{edge}}$ and $\mathcal{K}_{\text{inner}}$ respectively. 
+By modifying original PF-based multi-user scheduling, the resource access policy applies the
+following selecting criteria:
+\begin{equation}
+\label{eq_modify_PF1}
+f_b(S)=\prod_{k \in S} \left( 1+\frac{\alpha_b(k) R^{\text{(sic)}}_b(k|S;t)}{(t_c-1) T^{\gamma}(k;t)} \right) \text{and}
+%f_b(S)=\prod_{k \in S} \left( 1+\frac{ R^{\text{(sic)}}_b(k|S;t)}{(t_c-1) T^{\gamma}(k;t)} \right) \text{and}
+\end{equation}
+and the product of the average user throughput among users is maximized by selecting user 
+set $\mathcal{S}_b$ by
+\begin{equation}
+\label{eq_max_PF1}
+\mathcal{S}_b = \text{arg}\,\text{max}_s f_b(\mathcal{S})
+\end{equation}
+where $S$ is the schedule set and $\gamma(0\leq\gamma)$ is the 
+weighting factor designed to achieve better user 
+fairness.
+Here, soft priority access coefficient $\alpha$ denotes whether or not the
+users at the edge can access the inner band or interior users can access
+the edge band. The coefficient is defined as follows,
+\begin{equation}
+\label{eq_modify_PF2}
+ \alpha_b(k) = \left\{
+  \begin{array}{l l}
+    \alpha_{\text{edge}}, & b \in \mathcal{B}_{\text{inner}}, k \in \mathcal{K}_{\text{edge}} \\
+    \alpha_{\text{inner}}, & b \in \mathcal{B}_{\text{edge}}, k \in \mathcal{K}_{\text{inner}} \\
+    1, & \text{otherwise,}
+  \end{array} \right.
+\end{equation}
+
+To determine the transmission power in this case,
+equation~\ref{eq_modify_PF1} is approximated as
+\begin{equation}
+\label{eq_approx_for_pwr_alloc}
+f_b(\mathcal{S})=\underset{k\in\mathcal{S}}{\sum}{\frac{\alpha_b(k)R_b(k|S;t)}{T^\gamma(k;t)}}
+\end{equation}
+Which is a weighted sum of the instantaneous user throughput.
+Therefore, for given candidate scheduling policy,
+the metric can be maximized by water-filling power allocation method.
+
+By the scheduling method introduced in previous works, the performance of geometric
+mean user throughput of Non-orthogonal access with SIC networks is better than
+OFDM networks. However the performance of PF scheduler in NOMA-SIC access networks
+is not evaluated and remains unclear.
+
+
+
+
+
+
+
+
