@@ -1,0 +1,12 @@
+qualcomm product
+processor
+	for example: series snapdragon
+		snapdragon:
+			embedded functions: cpu, graphic processor(advanced process, display for solution), 
+				connectivity(wireless 4GLTE WiFi USB FM, etc.), 
+				multimedia(Audio, Vedio, Guestures), 
+				nevigation(GPS)
+				camera
+				other: chip for ultra low power applications and custom programming
+		product:
+			designed for smart phones, tablets, smart TV, digital media adapter

@@ -1,0 +1,23 @@
+\section{PHY Layer Aspects}
+\label{sec_phy}
+
+%In NOMA, there may exist more than one user accessing one resource so the decoding analysis is more complex than OFDMA in which every resource is allocated to at most one user. There are two different analysis: starting from Shannon capacity and starting from modulation and PER. In Section~\ref{sec_phy_shannon}, we introduce how to analyze NOMA with SIC by Shannon capacity, whose throughput is the ideal and theory. However, the simulation results considering modulation shows that the real throughput can not reach Shannon capacity. The aspect of modulation and PER is shown In Section~\ref{sec_phy_modulation}.
+
+\begin{figure}[t]
+\begin{center}
+\includegraphics[width=1.0\columnwidth ,angle=0]{figure/NOMA_shannon}
+\caption{Two-user SIC in the downlink}
+\label{fig_NOMA_shannon}
+\end{center}
+\end{figure}
+%
+
+%\subsection{Analysis starting from Shannon capacity}
+%\label{sec_phy_shannon}
+
+To allow non-orthogonal access from multiple users over the same radio resource, successive interference cancellation (SIC) 
+or superposition coding has been popularly considered in the literature~\cite{cite_docomo1,cite_docomo2,cite_docomo3}.
+%From our survey in~\cite{cite_docomo1,cite_docomo2,cite_docomo3}, the research about NOMA with SIC in Japan uses Shannon capacity to analyze. 
+
+\input{rcvrModel.tex}
+\input{mimoSICModel.tex}

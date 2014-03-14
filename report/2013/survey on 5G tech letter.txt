@@ -1,0 +1,76 @@
+﻿晉瑋 & 銘杰：
+
+以下的相關問題，是否已經有充分的搜尋並整理出相關結論？
+
+(1) FCC 開放的 3.5GHz 頻譜，其使用規定與其它 White Space 頻譜有何不同？
+目前全球 (美國) 對於此頻譜的使用態度如何? 以它來作為 LTE-A/5G small cell 
+的頻譜技術上有何挑戰？
+
+FCC3.5G 1.0hr
+Geographic exclusion zones - 
+
+
+
+
+
+ten year plan
+fast track report
+(considered based on tech. LTE and WiMax(1675-1710 MHz, 1755-1780 MHz, 3500-3650 MHz, and 4200-4220 MHz and 4380-4400 MHz))
+3Tier structure
+Geographic exclusion zones
+integrated geo-location technology is required(cite/96)
+database
+
+(cite/95)databased resource allocation(We(The Fed.) seek comment on the use of a dynamic spectrum access database, the SAS, to manage access and mitigate interference between all users in the 3.5 GHz Band. We also seek comment on what type of information must be included in the database and what technologies and techniques could be incorporated to protect classified and sensitive but unclassified federal data that is not publically releasable)
+(cite/95~) seeking comments
+(cite/106)Federal Spectrum Management System (FSMS) proposed for database mentioned b4.
+(cite/123) WiMax similarity (see ref/253)
+(cite/146~152) Access Coordination and Interference Mitigation Techniques
+white space 1.0hr
+tech report 1.0hr
+
+(2) 全球目前 GSM 頻段 (e.g. 900/1800/1900MHz) 執照的使用情況，是否該頻段
+會於 2020 年前釋出給其他的技術使用，還是允許業者做其他如 MTC 的使用？如
+歐盟對此頻譜有無任何的規劃？
+
+gsm 1.0hr
+
+(3) 把 ISM (NII) band 5GHz 的頻段拿來操作 LTE-A/5G 是否可行，目前這個頻段
+各種無線技術相互干擾狀況為何？不使用 WiFi 而是用 LTE-A/5G 的 PHY/MAC 
+技術來使用 (small cell) 此頻段有無優勢？與使用目前的 cellular band 相比，技術
+上有何挑戰？
+
+2hr
+
+(4) 對於在上述的頻譜上使用 LTE-A/5G 技術，有無現行系統沒有的 MAC (e.g. 排程)
+層問題？如果要使用諸如 carrier aggregation 的技術將 small cell 與 macro cell
+提供的服務 aggregate 在一起提供給使用者，現行技術是否可行?
+
+3hr
+
+**
+
+以上是老師想到的一些方向，老師已經初步在網路上找了些資料，不過希望你們能
+多花一些時間提供任何較深入的背景資訊與技術等資訊，以利評估．請注意所有評
+估都要有依據，言而有據，避免 trivial 且顯而易見的回答．
+
+由於聯發科將 proposal 的時程提前，要求每位老師於 9/25 前提供兩頁的構想書，
+
+
+所以請加快腳步．最晚請於星期一晚上彙整寄給老師，老師再與你們討論．
+
+
+
+World's First TV White Space WiFi Prototype Based on IEEE 802.11af Draft Standard Developed
+http://www.nict.go.jp/en/press/2012/10/17-1.html
+
+Geographic exclusion zones
+在exclusion zones內不能傳輸，而這些區域是根據WiMax(Macro cell)畫出來的，Interference Thresholds(定義在Fast Track Report(FTR) 4-5-4-6)
+在FTR試了多種Thresholds，但結論是根據-6dB
+>>I/N of -6 dB for average radar transmitter power.(FTR 5-4)
+
+integrated geo-location technology is required(第96項)
+>>We propose that Citizens Broadband Service devices would be required to utilize integrated geo-location technology and be able to access a database that identifies incumbent users entitled to interference protection, including DoD radar and FSS earth stations.
+
+第95項提到要建立的資料庫要減少各層使用者之間的影響，而不只有避開primary uers。
+>>(cite/95)databased resource allocation(We(The Fed.) seek comment on the use of a dynamic spectrum access database, the SAS, to manage access and mitigate interference between all users in the 3.5 GHz Band. We also seek comment on what type of information must be included in the database and what technologies and techniques could be incorporated to protect classified and sensitive but unclassified federal data that is not publically releasable)

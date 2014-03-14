@@ -1,0 +1,44 @@
+\subsection{MIMO SIC}
+For system beyond LTE-Advanced in the future, successive
+interference canceller (SIC) in the cellular multiple-input
+multiple-output (MIMO) is an important issue.
+
+We consider investigation of NOMA with SIC in the cellular MIMO system.
+The idea is to implement SIC to signals within
+a single beam controlled by the beamforming (precoding) matrix.
+In \cite{Non-orthogonal_Access_with_Random_Beamforming_and_Intra-beam_SIC_for_Cellular_MIMO_Downlink},
+the authors propose intra-beam superposition coding of a multiuser signal at
+the transmitter and the spatial filtering of inter-beam
+interference followed by the intra-beam SIC at the user terminal
+receiver. The intra-beam SIC cancels out the inter-user
+interference within a beam.
+According to \cite{Non-orthogonal_Access_with_Random_Beamforming_and_Intra-beam_SIC_for_Cellular_MIMO_Downlink},
+the channel after the spatial filtering is a degraded SISO
+channel, and the equivalent normalized channel gain of user
+$k$ scheduled in frequency block $b$ on beam $i$
+can be formulated as follows:
+
+%ufb->kbi
+\begin{equation}
+\label{eq:gain_mimo_mmse_rcvr}
+\begin{split}
+&g_{k,b,i}= \\
+&\frac{|\mathbf{v}^H_{k,b,i} \mathbf{H}_{k,b} \mathbf{m}_{b,i}|^2}{\underset{i'\in I, i'\neq i}{\sum} P_{i'}|\mathbf{v}^H_{k,b,i} \mathbf{H}_{k,b} \mathbf{m}_{b,i'}|^2 + \mathbf{v}^{H}_{k,b,i} E[\mathbf{w}_{k,b} \mathbf{w}^{H}_{k,b}] \mathbf{v}_{k,b,i}}
+\end{split}
+\end{equation}
+
+In equation~\ref{eq:gain_mimo_mmse_rcvr}, 
+$\mathbf{v}_{k,b,i}$ denotes the spacial filter vector, in \cite{Non-orthogonal_Access_with_Random_Beamforming_and_Intra-beam_SIC_for_Cellular_MIMO_Downlink},
+it is is calculated based on the minimum mean squared error
+(MMSE) criteria.
+$\mathbf{H}_{k,b}$ denotes the N $\times$ M-dimensional channel matrix between
+the base station and user $k$ at frequency block $b$.
+$\mathbf{m}_{b,i}$ denotes the transmitter beamforming vector.
+$\mathbf{w}_{k,b}$ denotes the receiver noise plus inter-cell interference
+vector at frequency block $b$,
+and $P_{i}$ is the transmission power of beam $i$.
+Therefore, we can apply intra-beam SIC to received signal in the
+same way by equation~\ref{eq_sic_shannon}.
+
+
+\input{bellLabSim.tex}

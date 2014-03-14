@@ -1,0 +1,41 @@
+\documentclass[conference,a4paper]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{textcomp}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{color}
+\usepackage[tableposition=top]{caption}
+\usepackage{setspace}
+
+\begin{document}
+\title{Survey on Non-orthogonal Multiple Access with SIC and Related Topics in Scheduling}
+
+\author{
+\authorblockN{Ming Jie Yang}\\
+\authorblockA{
+GICE, National Taiwan University\\
+Taipei, R.O.C\\
+R02942125@ntu.edu.tw\\
+2014 March}
+}
+%\IEEEspecialpapernotice{{\fontsize{12pt}{1em}\selectfont February 2014}}
+\maketitle
+
+\begin{abstract}
+\input{abstract.tex}
+\end{abstract}
+
+\input{introduction.tex}
+\input{phy.tex}
+\input{mac.tex}
+%\input{conclusion.tex}
+
+
+\bibliographystyle{IEEEtran}
+\bibliography{cite}
+
+\end{document}
