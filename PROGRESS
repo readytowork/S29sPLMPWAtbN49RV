@@ -1,0 +1,6 @@
+2014-03-19
+* Installation of IT++, and 3 other supporting external library packets ( BLAS,
+LAPACK, FFTW).
+* The linking of external library may fail to establish, re-installation is 
+needed for acceleration during runtime.
+
