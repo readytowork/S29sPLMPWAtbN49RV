@@ -61,7 +61,7 @@ end
 if CONFIG_IN.isCoded
     n=6;
     k=3;
-    decodedata = vitdec(deintlvddata,trellis,5,'trunc','hard');  % decoding datausing veterbi decoder
+    decodedata = vitdec(deintlvddata,CONFIG_IN.trellis,5,'trunc','hard');  % decoding datausing veterbi decoder
     rxed_data=decodedata;
 else
     rxed_data=deintlvddata;
