@@ -19,8 +19,8 @@ max_nloop_main = 100; % number of experiments
 SNRRange = 0:1:14;
 nMultiplexSignal = 1;
 
-config.isCoded = 0;
-config.isInterleaved = 0;
+config.isCoded = 1;
+config.isInterleaved = 1;
 config.nMultiplexSignal = nMultiplexSignal;
 
 testSample = [0 1 0 1 0 1 0 1];
@@ -47,6 +47,7 @@ if config.isCoded
     codegen = [171 133];    % Polynomial
     trellis = poly2trellis(constlen, codegen);
     codedata = convenc(data, trellis);
+    config.trellis = trellis;
 else
     codedata = data;
 end
@@ -62,8 +63,8 @@ for i = 1:nMultiplexSignal
 end
 
 if config.isInterleaved % "DEPRECATED"
-    intlvddata = matintrlv(matrix',2,2)'; % Interleave.
-    intlvddata = intlvddata';
+    intlvddata{1} = matintrlv(matrix{1}',2,2)'; % Interleave.
+    intlvddata{1} = intlvddata{1}';
 else
     for i = 1:nMultiplexSignal
         intlvddata{i} = matrix{i}';
@@ -129,7 +130,7 @@ indexSNR = 1;
 for snr=SNRRange
 
 %     ofdm_sig = cext_data;
-    ofdm_sig=awgn(cext_data,snr,'measured'); % Adding white Gaussian Noise
+    ofdm_sig = awgn(cext_data,snr,'measured'); % Adding white Gaussian Noise
     % figure;
     % index=1:80;
     % plot(index,cext_data,'b',index,ofdm_sig,'r'); %plot both signals

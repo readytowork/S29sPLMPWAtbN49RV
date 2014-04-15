@@ -16,8 +16,8 @@ clear all
 indexFstBitCurFrame=1;
 si=1; %for BER rows
 max_nloop_main = 100; % number of experiments
-SNRRange = 0:2:50;
-nMultiplexSignal = 2;
+SNRRange = 0:1:14;
+nMultiplexSignal = 1;
 
 config.isCoded = 0;
 config.isInterleaved = 0;
@@ -80,12 +80,13 @@ end
 M = 2^nbitSymbol; % 16
 symbols = cell(nMultiplexSignal, 1);
 for i = 1:nMultiplexSignal
-    symbols{i} = qammod(dec{i},M);
+    symbols{i} = qammod(dec{i}, M, 0, 'gray');
 end
 
 %% Multiplex Signals 
 alpha = 1;
-symbols = symbols{1}*(alpha^0.5) + symbols{2}*((1-alpha)^0.5);
+% symbols = symbols{1}*(alpha^0.5) + symbols{2}*((1-alpha)^0.5);
+symbols = symbols{1};
 
 %% Pilot insertion
 pilt = 3+3j;
@@ -127,8 +128,9 @@ end
 indexSNR = 1;
 for snr=SNRRange
 
+%     ofdm_sig = cext_data;
     ofdm_sig = cext_data;
-%     ofdm_sig=awgn(cext_data,snr,'measured'); % Adding white Gaussian Noise
+    ofdm_sig=awgn(cext_data,snr,'measured'); % Adding white Gaussian Noise
     % figure;
     % index=1:80;
     % plot(index,cext_data,'b',index,ofdm_sig,'r'); %plot both signals
@@ -159,12 +161,12 @@ end
 
 %% figure
 i=SNRRange;
-Eb_N0_dB = 0:2:50;
+Eb_N0_dB = SNRRange;
 QAM16_theory = (1/4)*3/2*erfc(sqrt(4*0.1*(10.^(Eb_N0_dB/10))));
 semilogy(i,ber{1},'Color','r');
 hold on
-semilogy(i,ber{2},'Color','b');
-hold on
+% semilogy(i,ber{2},'Color','b');
+% hold on
 semilogy(i,QAM16_theory,'Color','g');
 title('BER vs SNR');
 ylabel('BER');
