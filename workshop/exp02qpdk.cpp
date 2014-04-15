@@ -133,7 +133,7 @@ int main()
 
       //Demodulate the received QPSK symbols into received bits: Layer 2
       received_bits_1 = qpsk.demodulate_bits(received_symbols_1);
-      feedback_symbols_2 = pow(Ps * alpha(i) * h1, 0.5) * qpsk.modulate_bits(received_bits_1);
+      feedback_symbols_2 = pow(Ps * (1-alpha(i)) * h1, 0.5) * qpsk.modulate_bits(received_bits_1);
       received_bits_1 = qpsk.demodulate_bits(received_symbols_1 - feedback_symbols_2);
 
       //Calculate the bit error rate:

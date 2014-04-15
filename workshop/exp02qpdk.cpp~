@@ -171,10 +171,12 @@ int main()
 
   //Save the results to file:
   std::ofstream oo;
-  oo.open("exp02result.txt");
-  oo << alpha << " ";
-  oo << bit_error_rate_1 << " ";
-  oo << bit_error_rate_2 << endl;
+  oo.open("exp02result");
+  for (size_t i = 1; i < alpha.length(); i++) {
+    oo << alpha[i] << " ";
+    oo << bit_error_rate_1[i] << " ";
+    oo << bit_error_rate_2[i] << endl;
+  }
   oo.close();
 
   //Exit program:
