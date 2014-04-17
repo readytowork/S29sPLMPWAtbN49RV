@@ -1,14 +1,15 @@
 % collect and plot for hw2
 close all;
-FILE = {'./vsDistCost231-1.0.txt'};
+FILE = {'./exp02result'};
 fg = 1;
 
 figure(fg); fg = fg + 1;
 dat = dlmread(FILE{1});
 for j = 2:size(dat, 2)
-    ln(j-1) = line(dat(:,1), dat(:,j)*100,'Marker','o','LineWidth',2,'MarkerFaceColor','none','MarkerSize',8,'Color',[j/size(dat, 2) 0 0]);
+    ln(j-1) = line(dat(:,1), dat(:,j),'Marker','o','LineWidth',2,'MarkerFaceColor','none','MarkerSize',8,'Color',[j/size(dat, 2) 0 0]);
 end
-set(gca, 'XLim', [20 120]);
+set(gca, 'yScale', 'log'...
+    'yTick', []);
 L = legend('6Mbps','9Mbps','12Mbps','18Mbps','24Mbps','36Mbps','48Mbps','54Mbps');
 set(L,'FontSize',14);
 xlabel('Distance (m)','FontSize',14,'Color','k');
