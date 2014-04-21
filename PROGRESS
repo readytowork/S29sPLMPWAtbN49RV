@@ -3,4 +3,9 @@
 LAPACK, FFTW).
 * The linking of external library may fail to establish, re-installation is 
 needed for acceleration during runtime.
+* Note: work#01_0 given two users ( receivers ) and an BS (transmitter), what is
+the best power allocation strategy to maximize sum rate ? work#01_1 Compare the
+result of work#01_0 with mathematical model. Show that there's space for
+improvement.
 
+2014-04-20
