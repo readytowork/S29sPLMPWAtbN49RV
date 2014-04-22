@@ -48,6 +48,16 @@ int main( int argc, char* argv[])
   cvec transmitted_symbols_1, transmitted_symbols_2, transmitted_symbols; //cvec is a vector containing double_complex
   cvec received_symbols_1, received_symbols_2, feedback_symbols_1;
   cvec ofdm_symbols_1, ofdm_symbols_2;
+  // test upconv
+  cvec ocsi;
+  double unit_time = 3.25520833 * pow(10,-8); // 1/(2048*15k)
+  double fc = 2.6 * pow(10,9); // 2.6GHz
+  t_spanned.set_size(2048, false);
+  for (int i = 0; i < 2048; i++) {
+    t_spanned[i] = 
+  }
+  t_spanned = 
+  ocsi = exp(1i*2*pi*fc*t);
 
   //Declarations of classes:
   QPSK qpsk;                     //The QPSK modulator class
@@ -129,6 +139,8 @@ int main( int argc, char* argv[])
     awgn_channel.set_noise(N0);
 
     //Cut off imaginary part
+    ocsi = 
+    real_sig = real( ofdm_symbol_1*)
     /*for(int j = 0; j < length(ofdm_symbols_1); ++j){
       ofdm_symbols_1[j] = real( ofdm_symbols_1[j]);
       ofdm_symbols_2[j] = real( ofdm_symbols_2[j]);

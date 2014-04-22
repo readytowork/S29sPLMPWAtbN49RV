@@ -124,9 +124,6 @@ int main( int argc, char* argv[])
     //OFDM modulate
     ofdm.modulate(transmitted_symbols_1, ofdm_symbols_1);
     ofdm.modulate(transmitted_symbols_2, ofdm_symbols_2);
-    cout << "testLength: " << length(transmitted_symbols_1) << endl;
-    cout << "testLength: " << length(ofdm_symbols_1) << endl;
-    return 0;
 
     //Set the noise variance of the AWGN channel:
     awgn_channel.set_noise(N0);
