@@ -103,8 +103,14 @@ int main()
     cout << getValIndex(sorted) << endl;
     cout << getValIndex(sorted) + 1 << endl;
 
-    int blockSize = 10; // input size
+    // convolutional code
+    ivec gen = "01 07";
+    int constraint_length = 3;
+    Convolutional_Code nsc;
+    nsc.set_generator_polynomials(gen, constraint_length);
+    int blockSize = 3; // input size
     bvec encoder_input = randb(blockSize);
+    cout << "input : " << encoder_input << endl;
     int codedLen = 2 * (blockSize + (constraint_length - 1));
     int nBlocks = encoder_input.length() / blockSize;
     ivec window(blockSize);
@@ -116,6 +122,7 @@ int main()
     bvec tr_coded_bits;
     //cout << window << endl;
     for (int j = 0; j < nBlocks; j++) {
+      cout << encoder_input(window) << endl;
       nsc.encode_tail(encoder_input(window), nsc_coded_bits);
       window = window + blockSize;
       tr_coded_bits = concat(tr_coded_bits, nsc_coded_bits);
@@ -125,8 +132,12 @@ int main()
     /*for (int j = 0; j < Number_of_bits; j++) {
       transmitted_bits_2[j] = tr_coded_bits[j];
     }*/
+    cout << "encoder output: "<< tr_coded_bits << endl;
     
-    bvec decoder_input = tr_coded_bits;
+    BPSK mod;
+    vec rec_sig = mod.modulate_bits(tr_coded_bits);
+    
+    vec decoder_input = rec_sig;
     int nBlock_rcvd = decoder_input.length() / codedLen;
     //cout << "rcvd number of blocks : " << nBlock_rcvd << endl;
     vec codedBlock(codedLen);
@@ -136,15 +147,17 @@ int main()
       for (int k = 0; k < codedLen; k++) {
         codedBlock[k] = decoder_input[k + j*codedLen];
       }
-      nsc.decode_tail(codedBlock, bit_rcvd_tmp);
+      cout << codedBlock << endl;
+      bit_rcvd_tmp = nsc.decode_tail(codedBlock);
       bit_decoded = concat(bit_decoded, bit_rcvd_tmp);
     }
+    cout << "decode output : " << bit_decoded << endl;
     double nscErr = 0;
     for (int j = 0; j < bit_decoded.length(); j++) {
       if (bit_decoded[j] != encoder_input[j]) {
         nscErr++;
       }
-    }    
+    }
     cout << nscErr / bit_decoded.length() << endl;
     return 0;
 
