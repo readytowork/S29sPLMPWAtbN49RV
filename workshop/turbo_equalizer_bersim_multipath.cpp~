@@ -16,7 +16,7 @@ int main(void)
   int constraint_length = 3;
   int ch_nb_taps = 4;//number of channel multipaths
   int nb_errors_lim = 3000;
-  int nb_bits_lim = int(1e5);
+  int nb_bits_lim = int(1e6);
   int perm_len = pow2i(14);//permutation length
   int nb_iter = 10;//number of iterations in the turbo decoder
   vec EbN0_dB = "0:0.5:10";

@@ -78,6 +78,8 @@ int main()
   //Randomize the random number generators in it++:
   RNG_randomize();
 
+  
+
   //Iterate over all EbN0dB values:
   for (i = 0; i < alpha.length(); i++) {
 
@@ -88,6 +90,63 @@ int main()
     //Generate a vector of random bits to transmit:
     transmitted_bits_1 = randb(Number_of_bits);
     transmitted_bits_2 = randb(Number_of_bits);
+
+    ivec getValIndex = "05 11 12 07 03";
+    cout << getValIndex << endl;
+    cout << transmitted_bits_1(getValIndex) << endl;
+    for (int j = 0; j < 5; j++) {
+      cout << transmitted_bits_1(getValIndex(j)) << " ";
+    }
+    cout << endl;
+    ivec sorted = sort_index(getValIndex);
+    cout << sorted << endl;
+    cout << getValIndex(sorted) << endl;
+    cout << getValIndex(sorted) + 1 << endl;
+
+    int blockSize = 256; // input size
+    bvec encoder_input = randb(blockSize);
+    int codedLen = 2 * (blockSize + (constraint_length - 1));
+    int nBlocks = encoder_input.length() / blockSize;
+    ivec window(blockSize);
+    for (int j = 0; j < blockSize; j++) {
+      window[j] = j;
+    }
+    bvec nsc_coded_bits(codedLen);
+    //cout << codedLen << endl;
+    bvec tr_coded_bits;
+    //cout << window << endl;
+    for (int j = 0; j < nBlocks; j++) {
+      nsc.encode_tail(encoder_input(window), nsc_coded_bits);
+      window = window + blockSize;
+      tr_coded_bits = concat(tr_coded_bits, nsc_coded_bits);
+    }
+    //cout << tr_coded_bits.length() << endl;
+    //cout << (Number_of_bits/256)*(512+4) << endl;
+    /*for (int j = 0; j < Number_of_bits; j++) {
+      transmitted_bits_2[j] = tr_coded_bits[j];
+    }*/
+    
+    bvec decoder_input = tr_coded_bits;
+    int nBlock_rcvd = decoder_input.length() / codedLen;
+    //cout << "rcvd number of blocks : " << nBlock_rcvd << endl;
+    vec codedBlock(codedLen);
+    bvec bit_rcvd_tmp(blockSize);
+    bvec bit_decoded;
+    for (int j = 0; j < nBlock_rcvd; j++) {
+      for (int k = 0; k < codedLen; k++) {
+        codedBlock[k] = decoder_input[k + j*codedLen];
+      }
+      nsc.decode_tail(codedBlock, bit_rcvd_tmp);
+      bit_decoded = concat(bit_decoded, bit_rcvd_tmp);
+    }
+    double nscErr = 0;
+    for (int j = 0; j < bit_decoded.length(); j++) {
+      if (bit_decoded[j] != encoder_input[j]) {
+        nscErr++;
+      }
+    }    
+    cout << nscErr / bit_decoded.length() << endl;
+    return 0;
 
     //Modulate the bits to QPSK symbols:
     transmitted_symbols_1 = qpsk.modulate_bits(transmitted_bits_1);
@@ -125,19 +184,7 @@ int main()
     berc.clear();
     berc.count(transmitted_bits_2, received_bits_2);
     bit_error_rate_2(i) = berc.get_errorrate();
-
-    // check ber const 1e-2
-    double berLim = 0.01;
-    if (i != 0) {
-      if (bit_error_rate_2(i) > berLim && bit_error_rate_2(i-1) < berLim) {
-        if (i+1 != alpha.length()) {alpha(i+1) = (alpha(i) + alpha(i-1)) / 2.0;}
-      }
-      if (bit_error_rate_2(i) < berLim && bit_error_rate_2(i-1) > berLim) {
-        if (i+1 != alpha.length()) {alpha(i+1) = (alpha(i) + alpha(i-1)) / 2.0;}
-      }
-    }
   }
-
   tt.toc();
 
   // Theoretical results for multiple access
@@ -172,7 +219,6 @@ int main()
 
   //Exit program:
   return 0;
-
 }
 
 //Evaluate average power of given vector of symbols #M00

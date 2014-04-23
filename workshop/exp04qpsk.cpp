@@ -19,6 +19,7 @@ using namespace itpp;
 //These lines are needed for use of cout and endl
 using std::cout;
 using std::endl;
+using std::string;
 
 //Function defined here
 double eval_avg_power(const cvec& symbol_vec);
@@ -46,20 +47,10 @@ int main( int argc, char* argv[])
   bvec received_bits_1, received_bits_2;
 
   cvec transmitted_symbols_1, transmitted_symbols_2, transmitted_symbols; //cvec is a vector containing double_complex
-  cvec received_symbols_1, received_symbols_2, feedback_symbols_1;
+  cvec received_symbols_1, received_symbols_2, feedback_symbols_1, feedback_symbols_2;
   cvec ofdm_symbols_1, ofdm_symbols_2;
-  // test upconv
-  cvec ocsi;
-  double unit_time = 3.25520833 * pow(10,-8); // 1/(2048*15k)
-  double fc = 2.6 * pow(10,9); // 2.6GHz
-  t_spanned.set_size(2048, false);
-  for (int i = 0; i < 2048; i++) {
-    t_spanned[i] = 
-  }
-  t_spanned = 
-  ocsi = exp(1i*2*pi*fc*t);
 
-  //Declarations of classes:
+  // Declarations of classes:
   QPSK qpsk;                     //The QPSK modulator class
   AWGN_Channel awgn_channel;     //The AWGN channel class
   it_file ff;                    //For saving the results to file
@@ -92,6 +83,32 @@ int main( int argc, char* argv[])
   nFFT = 2048;                   //FFT size, default is 2048 LTE-a
   nCylicPrefix = 144;            //Length of Prefix, standard 144 (first prefix is different in real case)
 
+  // test upconv
+  cvec ocsi;
+  cvec t_spanned;
+  double unit_time = 3.25520833 * pow(10,-8); // 1/(2048*15k)
+  const double pi = 3.1415926535897;
+  const std::complex<double> unit_img (0.0,1.0);
+  double fc = 2.6 * pow(10,9); // 2.6GHz
+  t_spanned.set_size(2048, false);
+  for (int i = 0; i < 2048; i++) {
+    t_spanned[i] = exp(2*pi*fc*unit_time*i*unit_img);
+  }
+
+  // Declarations for equalizer & NSC coding
+  ivec gen = "07 05";//octal notation                                   //v
+  int constraint_length = 3;                                            //v
+  int perm_len = pow2i(14);//permutation length                         //v 188
+  // other parameters
+  int nb_bits_tail = perm_len / gen.length();                           //v
+  int nb_bits = nb_bits_tail - (constraint_length - 1);//number of bits in a block (without tail) //v
+  int nb_blocks;//number of blocks                                      //x
+  //bvec nsc_coded_bits(perm_len);//tail is added                       //v warning
+
+  //CCs
+  Convolutional_Code nsc;
+  nsc.set_generator_polynomials(gen, constraint_length);
+
   //Allocate storage space for the result vector.
   //The "false" argument means "Do not copy the old content of the vector to the new storage area."
   bit_error_rate_1.set_size(alpha.length(), false);
@@ -118,6 +135,11 @@ int main( int argc, char* argv[])
     transmitted_bits_1 = randb(Number_of_bits);
     transmitted_bits_2 = randb(Number_of_bits);
 
+    //convolutional code
+    
+
+    //nsc.encode_tail(transmitted_bits_1, nsc_coded_bits);//tail is added here to information bits to close the trellis
+
     //Modulate the bits to QPSK symbols:
     transmitted_symbols_1 = qpsk.modulate_bits(transmitted_bits_1);
     transmitted_symbols_2 = qpsk.modulate_bits(transmitted_bits_2);
@@ -138,40 +160,41 @@ int main( int argc, char* argv[])
     //Set the noise variance of the AWGN channel:
     awgn_channel.set_noise(N0);
 
-    //Cut off imaginary part
-    ocsi = 
-    real_sig = real( ofdm_symbol_1*)
-    /*for(int j = 0; j < length(ofdm_symbols_1); ++j){
-      ofdm_symbols_1[j] = real( ofdm_symbols_1[j]);
-      ofdm_symbols_2[j] = real( ofdm_symbols_2[j]);
-    }*/
+    //Up-conversion
 
     //Run the transmited symbols through the channel using the () operator:
-    ofdm_symbols_1 = awgn_channel( multipath_channel( ofdm_symbols_1));
-    ofdm_symbols_2 = awgn_channel( multipath_channel( ofdm_symbols_2));
-//    ofdm_symbols_1 = awgn_channel( ofdm_symbols_1);
-//    ofdm_symbols_2 = awgn_channel( ofdm_symbols_2);
+//    ofdm_symbols_1 = awgn_channel( multipath_channel( ofdm_symbols_1));
+//    ofdm_symbols_2 = awgn_channel( multipath_channel( ofdm_symbols_2));
+    ofdm_symbols_1 = awgn_channel( ofdm_symbols_1);
+    ofdm_symbols_2 = awgn_channel( ofdm_symbols_2);
 
+    // test zone!! KEEP OUT!!
+    
+
+
+
+
+    //alpha no greater than 0.5
     //OFDM demodulate
     ofdm.demodulate(ofdm_symbols_1, received_symbols_1);
     ofdm.demodulate(ofdm_symbols_2, received_symbols_2);
 
     //Demodulate the received QPSK symbols into received bits: Layer 1
-    received_bits_1 = qpsk.demodulate_bits(received_symbols_1);
-
-    //Demodulate the received QPSK symbols into received bits: Layer 2
     received_bits_2 = qpsk.demodulate_bits(received_symbols_2);
-    feedback_symbols_1 = pow(Ps * alpha(i) * h2, 0.5) * qpsk.modulate_bits(received_bits_2);
-    received_bits_2 = qpsk.demodulate_bits(received_symbols_2 - feedback_symbols_1);
+    
+    //Demodulate the received QPSK symbols into received bits: Layer 2
+    received_bits_1 = qpsk.demodulate_bits(received_symbols_1);
+    feedback_symbols_2 = pow(Ps * (1-alpha(i)) * h1, 0.5) * qpsk.modulate_bits(received_bits_1);
+    received_bits_1 = qpsk.demodulate_bits(received_symbols_1 - feedback_symbols_2);
 
     //Calculate the bit error rate:
     berc.clear();                               //Clear the bit error rate counter
-    berc.count(transmitted_bits_1, received_bits_1); //Count the bit errors
-    bit_error_rate_1(i) = berc.get_errorrate();   //Save the estimated BER in the result vector
+    berc.count(transmitted_bits_2, received_bits_2); //Count the bit errors
+    bit_error_rate_2(i) = berc.get_errorrate();   //Save the estimated BER in the result vector
 
     berc.clear();
-    berc.count(transmitted_bits_2, received_bits_2);
-    bit_error_rate_2(i) = berc.get_errorrate();
+    berc.count(transmitted_bits_1, received_bits_1);
+    bit_error_rate_1(i) = berc.get_errorrate();
   }
 
   tt.toc();
