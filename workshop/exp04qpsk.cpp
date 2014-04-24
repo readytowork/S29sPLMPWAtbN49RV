@@ -79,7 +79,7 @@ int main( int argc, char* argv[])
   h1 = pow(dist_1, -4.5);        //Channel gain for receiver 1
   h2 = pow(dist_2, -4.5);        //
   cout << "h1 = " << h1 << " h2 = " << h2 << endl;
-  alpha = linspace(1.0, 0.0, 21);//Simulate for different weight on power
+  alpha = linspace(0.5, 0.0, 21);//Simulate for different weight on power
   nFFT = 2048;                   //FFT size, default is 2048 LTE-a
   nCylicPrefix = 144;            //Length of Prefix, standard 144 (first prefix is different in real case)
 
@@ -96,16 +96,14 @@ int main( int argc, char* argv[])
   }
 
   // Declarations for equalizer & NSC coding
-  ivec gen = "07 05";//octal notation                                   //v
-  int constraint_length = 3;                                            //v
-  int perm_len = pow2i(14);//permutation length                         //v 188
+  ivec gen = "07 05";                                          //octal notation
+  int constraint_length = 3;                                   //constraint length
+  int blockSize = 188;//permutation length                //encoder output block size
   // other parameters
-  int nb_bits_tail = perm_len / gen.length();                           //v
-  int nb_bits = nb_bits_tail - (constraint_length - 1);//number of bits in a block (without tail) //v
-  int nb_blocks;//number of blocks                                      //x
-  //bvec nsc_coded_bits(perm_len);//tail is added                       //v warning
-
-  //CCs
+  int nb_bits_tail = blockSize / gen.length();                  //encoder input size + tail size
+  int nb_bits = nb_bits_tail - (constraint_length - 1);        //encoder block size
+  int nb_blocks;                                               //number of blocks
+  // Convolutional code
   Convolutional_Code nsc;
   nsc.set_generator_polynomials(gen, constraint_length);
 
@@ -135,9 +133,7 @@ int main( int argc, char* argv[])
     transmitted_bits_1 = randb(Number_of_bits);
     transmitted_bits_2 = randb(Number_of_bits);
 
-    //convolutional code
-    
-
+    //convolutional code encode
     //nsc.encode_tail(transmitted_bits_1, nsc_coded_bits);//tail is added here to information bits to close the trellis
 
     //Modulate the bits to QPSK symbols:

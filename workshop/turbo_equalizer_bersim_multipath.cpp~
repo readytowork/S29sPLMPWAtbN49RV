@@ -16,7 +16,7 @@ int main(void)
   int constraint_length = 3;
   int ch_nb_taps = 4;//number of channel multipaths
   int nb_errors_lim = 3000;
-  int nb_bits_lim = int(1e6);
+  int nb_bits_lim = int(1e5);
   int perm_len = pow2i(14);//permutation length
   int nb_iter = 10;//number of iterations in the turbo decoder
   vec EbN0_dB = "0:0.5:10";
@@ -64,8 +64,8 @@ int main(void)
   prec.set_generator_polynomials(prec_gen, prec_gen_length);
 #endif
 
-  //BPSK
-  BPSK bpsk;
+  //QPSK
+  QPSK qpsk;
 
   //AWGN
   AWGN_Channel awgn;
@@ -118,12 +118,12 @@ int main(void)
       em_bits = parity_bits.get_col(0);
 #endif
 
-      //BPSK modulation (1->-1,0->+1) + multipath channel
+      //QPSK modulation (1->-1,0->+1) + multipath channel
       ch_imp_response = randray(ch_nb_taps);
       ch_imp_response /= sqrt(sum_sqr(ch_imp_response));//normalized power profile
       multipath_channel.set_coeffs(ch_imp_response);
       multipath_channel.set_state(ini_state);//inital state is zero
-      rec = awgn(multipath_channel(bpsk.modulate_bits(em_bits)));
+      rec = awgn(multipath_channel(qpsk.modulate_bits(em_bits)));
 
       //turbo equalizer
       eq_apriori_data.zeros();//a priori information of emitted symbols
@@ -138,7 +138,7 @@ int main(void)
         siso.nsc(nsc_extrinsic_coded, nsc_extrinsic_data, nsc_intrinsic_coded, nsc_apriori_data, true);//tail
 
         //decision
-        rec_bits = bpsk.demodulate_bits(-nsc_extrinsic_data);//assume that a priori info is zero
+        rec_bits = qpsk.demodulate_bits(-nsc_extrinsic_data);//assume that a priori info is zero
         //count errors
         berc.clear();
         berc.count(bits, rec_bits.left(nb_bits));

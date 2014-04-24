@@ -78,7 +78,7 @@ int main()
   //Randomize the random number generators in it++:
   RNG_randomize();
 
-  
+  bool verbose = false;
 
   //Iterate over all EbN0dB values:
   for (i = 0; i < alpha.length(); i++) {
@@ -104,6 +104,8 @@ int main()
     cout << getValIndex(sorted) + 1 << endl;
 
     // convolutional code
+    if (verbose) {
+    
     ivec gen = "01 07";
     int constraint_length = 3;
     Convolutional_Code nsc;
@@ -134,8 +136,10 @@ int main()
     }*/
     cout << "encoder output: "<< tr_coded_bits << endl;
     
-    nsc.reset();
-    bvec decoder_input = tr_coded_bits;
+    BPSK mod;
+    vec rec_sig = mod.modulate_bits(tr_coded_bits);
+    
+    vec decoder_input = rec_sig;
     int nBlock_rcvd = decoder_input.length() / codedLen;
     //cout << "rcvd number of blocks : " << nBlock_rcvd << endl;
     vec codedBlock(codedLen);
@@ -157,6 +161,69 @@ int main()
       }
     }
     cout << nscErr / bit_decoded.length() << endl;
+    
+    }
+    
+    // linear mmse test
+    cvec sig_test = "1 1 2 1 1 2 0 0 0 0";
+    vec ht = "0.2 0.9 0.3";
+    int ch_tap = ht.length();
+    MA_Filter<std::complex<double>, std::complex<double>, std::complex<double> > multipath_channel;
+    multipath_channel.set_coeffs( to_cvec(ht));
+    multipath_channel.set_state(to_cvec( zeros(ch_tap)));
+    cvec sig_rcvd = multipath_channel(sig_test);
+    cout << sig_rcvd << endl;
+    // input ht vec
+    double noisevar_ = 0.0158;
+    int eq_tap = 7;
+    cout << "ht : " << ht << endl;
+    
+    vec hAutoCorr(ch_tap * 2 -1);
+    vec tmp(ch_tap);
+    for (int j = 0; j < ch_tap; j++) {
+      tmp = ht * ht[ch_tap - j - 1];
+      for (int k = 0; k < ch_tap; k++) {
+        hAutoCorr[j+k] += tmp[k];
+      }
+    }
+    cout << "hAutoCorr : " << hAutoCorr << endl;
+    
+    mat hM(eq_tap, eq_tap);
+    int idx;
+    for (int j = 0; j < eq_tap; j++) {
+      for (int k = 0; k < eq_tap; k++) {
+        idx = ch_tap + k - j -1;
+        if (idx >= ch_tap * 2 -1 || idx < 0) {
+          hM(j, k) = 0;
+        } 
+        else {
+          hM(j, k) = hAutoCorr(ch_tap + k - j -1);
+        }
+      }
+    }
+    cout << "hM : \n" << hM << endl;
+    
+    mat eye_7 = eye(eq_tap);
+    hM += eye_7 * noisevar_;
+    cout << "puls N0: \n" << hM << endl;
+    
+    vec c_mmse(eq_tap);
+    vec d = concat(zeros(2), reverse(ht), zeros(2));
+    #if defined(HAVE_LAPACK)
+    cout << "YES\n";
+    #endif
+    mat inv_hM = inv(hM);
+    cout << "INV:\n" << inv_hM << endl;
+    for (int j = 0; j < eq_tap; j++) {
+      c_mmse[j] = dot(inv_hM.get_col(j),d);
+    }
+    cout << "c MMSE: " << c_mmse << endl;
+    
+    MA_Filter<std::complex<double>, std::complex<double>, std::complex<double> > equalizer;
+    equalizer.set_coeffs( to_cvec(c_mmse));
+    equalizer.set_state(to_cvec( zeros(eq_tap)));
+    cvec sig_eqed = equalizer(sig_rcvd);
+    cout << "ANS: " << sig_eqed << endl;
     return 0;
 
     //Modulate the bits to QPSK symbols:
