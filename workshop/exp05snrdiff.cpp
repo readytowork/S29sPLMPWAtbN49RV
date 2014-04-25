@@ -104,7 +104,7 @@ int main()
     cout << getValIndex(sorted) + 1 << endl;
 
     // convolutional code
-    if (true) {
+    if (verbose) {
     
     ivec gen = "01 07";
     int constraint_length = 3;
@@ -165,8 +165,9 @@ int main()
     }
     
     // linear mmse test
-    cvec sig_test = "1 1 2 1 1 2 0 0 0 0 0 0 0";
-    vec ht = "0.2 0.9 0.3";
+    cvec sig_test = "9.07032e-08-1.03701e-07i 3.13527e-07-7.27227e-08i -1.67824e-07-4.22301e-07i 1.3437e-07-2.14683e-08i -1.5889e-07+1.45796e-07i -2.84262e-07+4.55597e-08i 2.67125e-07+5.13786e-07i -2.85874e-07+1.4919e-07i";
+    sig_test = concat(sig_test, zeros_c(4));
+    vec ht = "0.206284 0.928279 0.309426";
     int ch_tap = ht.length();
     MA_Filter<std::complex<double>, std::complex<double>, std::complex<double> > multipath_channel;
     multipath_channel.set_coeffs( to_cvec(ht));
@@ -174,7 +175,7 @@ int main()
     cvec sig_rcvd = multipath_channel(sig_test);
     cout << sig_rcvd << endl;
     // input ht vec
-    double noisevar_ = 0.0158;
+    double noisevar_ = 4 * pow(10, -15);
     int eq_tap = 7;
     cout << "ht : " << ht << endl;
     
@@ -213,6 +214,7 @@ int main()
     cout << "YES\n";
     #endif
     mat inv_hM = inv(hM);
+    cout << "puls N0: \n" << hM << endl;
     cout << "INV:\n" << inv_hM << endl;
     for (int j = 0; j < eq_tap; j++) {
       c_mmse[j] = dot(inv_hM.get_col(j),d);
@@ -223,7 +225,8 @@ int main()
     equalizer.set_coeffs( to_cvec(c_mmse));
     equalizer.set_state(to_cvec( zeros(eq_tap)));
     cvec sig_eqed = equalizer(sig_rcvd);
-    cout << "ANS: " << sig_eqed << endl;
+    cvec ans = sig_eqed.get(4, sig_eqed.length()-1);
+    cout << "ANS: " << ans << endl;
     return 0;
 
     //Modulate the bits to QPSK symbols:

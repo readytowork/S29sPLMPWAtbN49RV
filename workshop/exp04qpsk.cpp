@@ -26,6 +26,7 @@ double eval_avg_power(const cvec& symbol_vec);
 bvec encode(Convolutional_Code& nsc, int constraint_length, const bvec& encoder_input, int blockSize, bool verbose);
 bvec decode(Convolutional_Code& nsc, int constraint_length, const bvec& decoder_input, int blockSize, bool verbose);
 void zero_pad_back(cvec& vec_in, int m_in);
+void mmse_equalizer_simple(cvec& sig_in, cvec& sig_out, vec& channel_est, double noise_var, bool verbose);
 
 int main( int argc, char* argv[])
 {
@@ -62,11 +63,11 @@ int main( int argc, char* argv[])
   OFDM ofdm;                     //OFDM modulator class
 
   MA_Filter<std::complex<double>, std::complex<double>, std::complex<double> > multipath_channel; //Simulate multi-path enviornment
-  int ch_nb_taps = 2;
-  cvec ch_imp_response( ch_nb_taps);
-  cvec ini_state = to_cvec( ones(ch_nb_taps));
-  ch_imp_response = to_cvec( randray( ch_nb_taps));
-  ch_imp_response /= sqrt(sum_sqr( ch_imp_response));//normalized power profile
+  int ch_nb_taps = 3;
+  cvec ini_state = to_cvec( zeros(ch_nb_taps));
+  vec ch_imp_response_real = "0.2 0.9 0.3";//randray( ch_nb_taps);
+  ch_imp_response_real /= sqrt(sum_sqr( ch_imp_response_real));//normalized power profile
+  cvec ch_imp_response = to_cvec( ch_imp_response_real);
   cout << ch_imp_response << endl;
   multipath_channel.set_coeffs( ch_imp_response);
   multipath_channel.set_state(ini_state);//inital state is zero
@@ -162,21 +163,28 @@ int main( int argc, char* argv[])
     ofdm.modulate(transmitted_symbols_2, ofdm_symbols_2);
 
     //Set the noise variance of the AWGN channel:
+    //ivec testIdx = "0 1 2 3 4 5 6 7";
+    //cout << ofdm_symbols_2(testIdx) << endl;
+    //ofdm_symbols_2 = "9.07032e-08-1.03701e-07i 3.13527e-07-7.27227e-08i -1.67824e-07-4.22301e-07i 1.3437e-07-2.14683e-08i -1.5889e-07+1.45796e-07i -2.84262e-07+4.55597e-08i 2.67125e-07+5.13786e-07i -2.85874e-07+1.4919e-07i";
+    ofdm_symbols_2 = concat(ofdm_symbols_2, zeros_c(4));
+    //cout << "N0: " << N0 << endl;
     awgn_channel.set_noise(N0);
 
     //Up-conversion
 
     //Run the transmited symbols through the channel using the () operator:
 //    ofdm_symbols_1 = awgn_channel( multipath_channel( ofdm_symbols_1));
-//    ofdm_symbols_2 = awgn_channel( multipath_channel( ofdm_symbols_2));
+    ofdm_symbols_2 = awgn_channel( multipath_channel( ofdm_symbols_2));
     ofdm_symbols_1 = awgn_channel( ofdm_symbols_1);
-    ofdm_symbols_2 = awgn_channel( ofdm_symbols_2);
+    //ofdm_symbols_2 = awgn_channel( ofdm_symbols_2);
 
     // test zone!! KEEP OUT!!
-    
-
-
-
+    //cout << ofdm_symbols_2 << endl;
+    cvec ofdm_symbols_eqed_2;
+    mmse_equalizer_simple(ofdm_symbols_2, ofdm_symbols_eqed_2, ch_imp_response_real, N0, false);
+    ofdm_symbols_2 = ofdm_symbols_eqed_2;
+    //cout << ofdm_symbols_2 << endl;
+	//return 0;
 
     //alpha no greater than 0.5
     //OFDM demodulate
@@ -334,6 +342,72 @@ void zero_pad_back(cvec& vec_in, int m_in)
   int quotient = vec_in.length() / m_in;
   int n_remainder = (quotient + 1) * m_in - vec_in.length();
   vec_in = concat(vec_in, zeros_c(n_remainder));
+}
+
+void mmse_equalizer_simple(cvec& sig_in, cvec& sig_out, vec& channel_est, double noise_var, bool verbose)
+{
+    //cvec sig_in = "1 1 2 1 1 2 3 5 8 2 0 0 2 4 5 7 7 7 0 0 1";
+    //sig_in = concat(sig_in, zeros_c(4));
+    vec ht = channel_est;
+    int ch_tap = ht.length();
+    //MA_Filter<std::complex<double>, std::complex<double>, std::complex<double> > multipath_channel;
+    //multipath_channel.set_coeffs( to_cvec(ht));
+    //multipath_channel.set_state(to_cvec( zeros(ch_tap)));
+    //cvec sig_rcvd = multipath_channel(sig_in);
+    //cout << sig_rcvd << endl;
+    // input ht vec
+    //double noise_var = 0.0158;
+    int eq_tap = 7;
+    if (verbose) {cout << "ht : " << ht << endl;}
+    
+    vec hAutoCorr = zeros(ch_tap * 2 -1);
+    vec tmp(ch_tap);
+    for (int j = 0; j < ch_tap; j++) {
+      tmp = ht * ht[ch_tap - j - 1];
+      for (int k = 0; k < ch_tap; k++) {
+        hAutoCorr[j+k] += tmp[k];
+      }
+    }
+    if (verbose) {cout << "hAutoCorr : " << hAutoCorr << endl;}
+    
+    mat hM(eq_tap, eq_tap);
+    int idx;
+    for (int j = 0; j < eq_tap; j++) {
+      for (int k = 0; k < eq_tap; k++) {
+        idx = ch_tap + k - j -1;
+        if (idx >= ch_tap * 2 -1 || idx < 0) {
+          hM(j, k) = 0;
+        } 
+        else {
+          hM(j, k) = hAutoCorr(ch_tap + k - j -1);
+        }
+      }
+    }
+    if (verbose) {cout << "hM : \n" << hM << endl;}
+    
+    mat eye_7 = eye(eq_tap);
+    hM += eye_7 * noise_var;
+    if (verbose) {cout << "puls N0: \n" << hM << endl;}
+    
+    vec c_mmse(eq_tap);
+    vec d = concat(zeros(2), reverse(ht), zeros(2));
+    mat inv_hM = inv(hM);
+    if (verbose) {cout << "INV:\n" << inv_hM << endl;}
+    
+    for (int j = 0; j < eq_tap; j++) {
+      c_mmse[j] = dot(inv_hM.get_col(j),d);
+    }
+    if (verbose) {cout << "c MMSE: " << c_mmse << endl;}
+    cout << "c MMSE: " << c_mmse << endl;
+    
+    MA_Filter<std::complex<double>, std::complex<double>, std::complex<double> > equalizer;
+    equalizer.set_coeffs( to_cvec(c_mmse));
+    equalizer.set_state(to_cvec( zeros(eq_tap)));
+    cvec sig_eqed = equalizer(sig_in);
+    cvec ans = sig_eqed.get(4, sig_eqed.length()-1);
+    //if (verbose) cout << "ANS: " << ans << endl;
+    
+    sig_out = ans;
 }
 
 
