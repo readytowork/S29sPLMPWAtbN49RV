@@ -23,6 +23,9 @@ using std::string;
 
 //Function defined here
 double eval_avg_power(const cvec& symbol_vec);
+bvec encode(Convolutional_Code& nsc, int constraint_length, const bvec& encoder_input, int blockSize, bool verbose);
+bvec decode(Convolutional_Code& nsc, int constraint_length, const bvec& decoder_input, int blockSize, bool verbose);
+void zero_pad_back(cvec& vec_in, int m_in);
 
 int main( int argc, char* argv[])
 {
@@ -98,7 +101,7 @@ int main( int argc, char* argv[])
   // Declarations for equalizer & NSC coding
   ivec gen = "07 05";                                          //octal notation
   int constraint_length = 3;                                   //constraint length
-  int blockSize = 188;//permutation length                //encoder output block size
+  int blockSize = 13;//permutation length                //encoder output block size
   // other parameters
   int nb_bits_tail = blockSize / gen.length();                  //encoder input size + tail size
   int nb_bits = nb_bits_tail - (constraint_length - 1);        //encoder block size
@@ -134,11 +137,14 @@ int main( int argc, char* argv[])
     transmitted_bits_2 = randb(Number_of_bits);
 
     //convolutional code encode
+    bvec out_binary_1 = encode(nsc, constraint_length, transmitted_bits_1, blockSize, false);
+    bvec out_binary_2 = encode(nsc, constraint_length, transmitted_bits_2, blockSize, false);
+    
     //nsc.encode_tail(transmitted_bits_1, nsc_coded_bits);//tail is added here to information bits to close the trellis
 
     //Modulate the bits to QPSK symbols:
-    transmitted_symbols_1 = qpsk.modulate_bits(transmitted_bits_1);
-    transmitted_symbols_2 = qpsk.modulate_bits(transmitted_bits_2);
+    transmitted_symbols_1 = qpsk.modulate_bits(out_binary_1);
+    transmitted_symbols_2 = qpsk.modulate_bits(out_binary_2);
 
     //Multiplex two signals
     transmitted_symbols = transmitted_symbols_1 * pow(alpha(i), 0.5) + transmitted_symbols_2 * pow(1 - alpha(i), 0.5);
@@ -150,6 +156,8 @@ int main( int argc, char* argv[])
     transmitted_symbols_2 = transmitted_symbols * pow(h2, 0.5);
 
     //OFDM modulate
+    zero_pad_back(transmitted_symbols_1, 2048);
+    zero_pad_back(transmitted_symbols_2, 2048);
     ofdm.modulate(transmitted_symbols_1, ofdm_symbols_1);
     ofdm.modulate(transmitted_symbols_2, ofdm_symbols_2);
 
@@ -177,19 +185,21 @@ int main( int argc, char* argv[])
 
     //Demodulate the received QPSK symbols into received bits: Layer 1
     received_bits_2 = qpsk.demodulate_bits(received_symbols_2);
+    bvec out_binary_recover_2 = decode(nsc, constraint_length, received_bits_2, blockSize, false);
     
     //Demodulate the received QPSK symbols into received bits: Layer 2
     received_bits_1 = qpsk.demodulate_bits(received_symbols_1);
     feedback_symbols_2 = pow(Ps * (1-alpha(i)) * h1, 0.5) * qpsk.modulate_bits(received_bits_1);
     received_bits_1 = qpsk.demodulate_bits(received_symbols_1 - feedback_symbols_2);
+    bvec out_binary_recover_1 = decode(nsc, constraint_length, received_bits_1, blockSize, false);
 
     //Calculate the bit error rate:
     berc.clear();                               //Clear the bit error rate counter
-    berc.count(transmitted_bits_2, received_bits_2); //Count the bit errors
+    berc.count(transmitted_bits_2, out_binary_recover_2); //Count the bit errors
     bit_error_rate_2(i) = berc.get_errorrate();   //Save the estimated BER in the result vector
 
     berc.clear();
-    berc.count(transmitted_bits_1, received_bits_1);
+    berc.count(transmitted_bits_1, out_binary_recover_1);
     bit_error_rate_1(i) = berc.get_errorrate();
   }
 
@@ -257,6 +267,73 @@ double eval_avg_power(const cvec& symbol_vec)
     cout << "[M00] " << "Average power = " << average_power << endl;
   }
   return average_power;
+}
+
+bvec encode(Convolutional_Code& nsc, int constraint_length, const bvec& encoder_input, int blockSize, bool verbose)
+{
+  if (verbose) {cout << "input : " << encoder_input << endl;}
+  
+  int codedLen = 2 * (blockSize + (constraint_length - 1));
+  int nBlocks = encoder_input.length() / blockSize;
+  ivec window(blockSize);
+  for (int j = 0; j < blockSize; j++) {
+    window[j] = j;
+  }
+  
+  bvec nsc_coded_bits(codedLen);
+  bvec tr_coded_bits;
+  for (int j = 0; j < nBlocks; j++) {
+    nsc.encode_tail(encoder_input(window), nsc_coded_bits);
+    window = window + blockSize;
+    tr_coded_bits = concat(tr_coded_bits, nsc_coded_bits);
+  }
+  
+  // Deal with residual sources if remainder exsists
+  if (nBlocks*blockSize != encoder_input.length()) {
+    bvec residual_bits = encoder_input.get(nBlocks*blockSize, encoder_input.length()-1);
+    nsc.encode_tail(residual_bits, nsc_coded_bits);
+    tr_coded_bits = concat(tr_coded_bits, nsc_coded_bits);
+  }
+  
+  if (verbose) {cout << "encoder output: " << tr_coded_bits << endl;}
+  return tr_coded_bits;
+}
+
+bvec decode(Convolutional_Code& nsc, int constraint_length, const bvec& decoder_input, int blockSize, bool verbose)
+{
+  BPSK mod;
+  vec decoder_input_mod = mod.modulate_bits(decoder_input);
+  int codedLen = 2 * (blockSize + (constraint_length - 1));
+  int nBlock_rcvd = decoder_input_mod.length() / codedLen;
+  if (verbose) {cout << "rcvd number of blocks : " << nBlock_rcvd << endl;}
+  
+  vec codedBlock(codedLen);
+  bvec bit_rcvd_tmp(blockSize);
+  bvec bit_decoded;
+  
+  for (int j = 0; j < nBlock_rcvd; j++) {
+    for (int k = 0; k < codedLen; k++) {
+      codedBlock[k] = decoder_input_mod[k + j*codedLen];
+    }
+    //cout << codedBlock << endl;
+    bit_rcvd_tmp = nsc.decode_tail(codedBlock);
+    bit_decoded = concat(bit_decoded, bit_rcvd_tmp);
+  }
+  
+  // Deal with residual sources if remainder exsists
+  vec residual_bits = decoder_input_mod.get(nBlock_rcvd*codedLen, decoder_input_mod.length()-1);
+  nsc.decode_tail( residual_bits, bit_rcvd_tmp);
+  bit_decoded = concat(bit_decoded, bit_rcvd_tmp);
+  
+  if (verbose) {cout << "decode output : " << bit_decoded << endl;}
+  return bit_decoded;
+}
+
+void zero_pad_back(cvec& vec_in, int m_in)
+{
+  int quotient = vec_in.length() / m_in;
+  int n_remainder = (quotient + 1) * m_in - vec_in.length();
+  vec_in = concat(vec_in, zeros_c(n_remainder));
 }
 
 

@@ -104,14 +104,14 @@ int main()
     cout << getValIndex(sorted) + 1 << endl;
 
     // convolutional code
-    if (verbose) {
+    if (true) {
     
     ivec gen = "01 07";
     int constraint_length = 3;
     Convolutional_Code nsc;
     nsc.set_generator_polynomials(gen, constraint_length);
     int blockSize = 3; // input size
-    bvec encoder_input = randb(blockSize);
+    bvec encoder_input = randb(200);
     cout << "input : " << encoder_input << endl;
     int codedLen = 2 * (blockSize + (constraint_length - 1));
     int nBlocks = encoder_input.length() / blockSize;
@@ -161,11 +161,11 @@ int main()
       }
     }
     cout << nscErr / bit_decoded.length() << endl;
-    
+    cout << encoder_input.length() << " ; " << bit_decoded.length() << endl;
     }
     
     // linear mmse test
-    cvec sig_test = "1 1 2 1 1 2 0 0 0 0";
+    cvec sig_test = "1 1 2 1 1 2 0 0 0 0 0 0 0";
     vec ht = "0.2 0.9 0.3";
     int ch_tap = ht.length();
     MA_Filter<std::complex<double>, std::complex<double>, std::complex<double> > multipath_channel;

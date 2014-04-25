@@ -104,14 +104,14 @@ int main()
     cout << getValIndex(sorted) + 1 << endl;
 
     // convolutional code
-    if (verbose) {
+    if (true) {
     
     ivec gen = "01 07";
     int constraint_length = 3;
     Convolutional_Code nsc;
     nsc.set_generator_polynomials(gen, constraint_length);
     int blockSize = 3; // input size
-    bvec encoder_input = randb(blockSize);
+    bvec encoder_input = randb(200);
     cout << "input : " << encoder_input << endl;
     int codedLen = 2 * (blockSize + (constraint_length - 1));
     int nBlocks = encoder_input.length() / blockSize;
@@ -134,7 +134,7 @@ int main()
     /*for (int j = 0; j < Number_of_bits; j++) {
       transmitted_bits_2[j] = tr_coded_bits[j];
     }*/
-    cout << "encoder output: "<< tr_coded_bits << endl;
+    cout << "encoder output: " << tr_coded_bits << endl;
     
     BPSK mod;
     vec rec_sig = mod.modulate_bits(tr_coded_bits);
@@ -161,7 +161,7 @@ int main()
       }
     }
     cout << nscErr / bit_decoded.length() << endl;
-    
+    cout << encoder_input.length() << " ; " << bit_decoded.length() << endl;
     }
     
     // linear mmse test
