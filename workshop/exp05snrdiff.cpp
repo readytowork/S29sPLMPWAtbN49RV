@@ -167,7 +167,7 @@ int main()
     // linear mmse test
     cvec sig_test = "9.07032e-08-1.03701e-07i 3.13527e-07-7.27227e-08i -1.67824e-07-4.22301e-07i 1.3437e-07-2.14683e-08i -1.5889e-07+1.45796e-07i -2.84262e-07+4.55597e-08i 2.67125e-07+5.13786e-07i -2.85874e-07+1.4919e-07i";
     sig_test = concat(sig_test, zeros_c(4));
-    vec ht = "0.206284 0.928279 0.309426";
+    vec ht = "1.0 1.0 0.0";
     int ch_tap = ht.length();
     MA_Filter<std::complex<double>, std::complex<double>, std::complex<double> > multipath_channel;
     multipath_channel.set_coeffs( to_cvec(ht));
