@@ -1,0 +1,272 @@
+500 500
+h1 = 7.15542e-13 h2 = 7.15542e-13
+
+  PASS  
+Saving results to result10
+500 600
+h1 = 7.15542e-13 h2 = 3.15006e-13
+
+  PASS  
+Saving results to result11
+500 700
+h1 = 7.15542e-13 h2 = 1.5742e-13
+
+  PASS  
+Saving results to result12
+500 800
+h1 = 7.15542e-13 h2 = 8.63167e-14
+
+  PASS  
+Saving results to result13
+500 900
+h1 = 7.15542e-13 h2 = 5.08053e-14
+
+  PASS  
+Saving results to result14
+500 1000
+h1 = 7.15542e-13 h2 = 3.16228e-14
+
+  PASS  
+Saving results to result15
+500 1100
+h1 = 7.15542e-13 h2 = 2.05936e-14
+
+  PASS  
+Saving results to result16
+500 1200
+h1 = 7.15542e-13 h2 = 1.39214e-14
+
+  PASS  
+Saving results to result17
+500 1300
+h1 = 7.15542e-13 h2 = 9.7108e-15
+
+  PASS  
+Saving results to result18
+500 1400
+h1 = 7.15542e-13 h2 = 6.95703e-15
+
+Saving results to result19
+500 1500
+h1 = 7.15542e-13 h2 = 5.10022e-15
+
+Saving results to result20
+600 600
+h1 = 3.15006e-13 h2 = 3.15006e-13
+
+  PASS  
+Saving results to result21
+600 700
+h1 = 3.15006e-13 h2 = 1.5742e-13
+
+  PASS  
+Saving results to result22
+600 800
+h1 = 3.15006e-13 h2 = 8.63167e-14
+
+  PASS  
+Saving results to result23
+600 900
+h1 = 3.15006e-13 h2 = 5.08053e-14
+
+  PASS  
+Saving results to result24
+600 1000
+h1 = 3.15006e-13 h2 = 3.16228e-14
+
+  PASS  
+Saving results to result25
+600 1100
+h1 = 3.15006e-13 h2 = 2.05936e-14
+
+  PASS  
+Saving results to result26
+600 1200
+h1 = 3.15006e-13 h2 = 1.39214e-14
+
+Saving results to result27
+600 1300
+h1 = 3.15006e-13 h2 = 9.7108e-15
+
+Saving results to result28
+600 1400
+h1 = 3.15006e-13 h2 = 6.95703e-15
+
+Saving results to result29
+600 1500
+h1 = 3.15006e-13 h2 = 5.10022e-15
+
+Saving results to result30
+700 700
+h1 = 1.5742e-13 h2 = 1.5742e-13
+
+Saving results to result31
+700 800
+h1 = 1.5742e-13 h2 = 8.63167e-14
+
+Saving results to result32
+700 900
+h1 = 1.5742e-13 h2 = 5.08053e-14
+
+Saving results to result33
+700 1000
+h1 = 1.5742e-13 h2 = 3.16228e-14
+
+Saving results to result34
+700 1100
+h1 = 1.5742e-13 h2 = 2.05936e-14
+
+Saving results to result35
+700 1200
+h1 = 1.5742e-13 h2 = 1.39214e-14
+
+Saving results to result36
+700 1300
+h1 = 1.5742e-13 h2 = 9.7108e-15
+
+Saving results to result37
+700 1400
+h1 = 1.5742e-13 h2 = 6.95703e-15
+
+Saving results to result38
+700 1500
+h1 = 1.5742e-13 h2 = 5.10022e-15
+
+Saving results to result39
+800 800
+h1 = 8.63167e-14 h2 = 8.63167e-14
+
+Saving results to result40
+800 900
+h1 = 8.63167e-14 h2 = 5.08053e-14
+
+Saving results to result41
+800 1000
+h1 = 8.63167e-14 h2 = 3.16228e-14
+
+Saving results to result42
+800 1100
+h1 = 8.63167e-14 h2 = 2.05936e-14
+
+Saving results to result43
+800 1200
+h1 = 8.63167e-14 h2 = 1.39214e-14
+
+Saving results to result44
+800 1300
+h1 = 8.63167e-14 h2 = 9.7108e-15
+
+Saving results to result45
+800 1400
+h1 = 8.63167e-14 h2 = 6.95703e-15
+
+Saving results to result46
+800 1500
+h1 = 8.63167e-14 h2 = 5.10022e-15
+
+Saving results to result47
+900 900
+h1 = 5.08053e-14 h2 = 5.08053e-14
+
+Saving results to result48
+900 1000
+h1 = 5.08053e-14 h2 = 3.16228e-14
+
+Saving results to result49
+900 1100
+h1 = 5.08053e-14 h2 = 2.05936e-14
+
+Saving results to result50
+900 1200
+h1 = 5.08053e-14 h2 = 1.39214e-14
+
+Saving results to result51
+900 1300
+h1 = 5.08053e-14 h2 = 9.7108e-15
+
+Saving results to result52
+900 1400
+h1 = 5.08053e-14 h2 = 6.95703e-15
+
+Saving results to result53
+900 1500
+h1 = 5.08053e-14 h2 = 5.10022e-15
+
+Saving results to result54
+1000 1000
+h1 = 3.16228e-14 h2 = 3.16228e-14
+
+Saving results to result55
+1000 1100
+h1 = 3.16228e-14 h2 = 2.05936e-14
+
+Saving results to result56
+1000 1200
+h1 = 3.16228e-14 h2 = 1.39214e-14
+
+Saving results to result57
+1000 1300
+h1 = 3.16228e-14 h2 = 9.7108e-15
+
+Saving results to result58
+1000 1400
+h1 = 3.16228e-14 h2 = 6.95703e-15
+
+Saving results to result59
+1000 1500
+h1 = 3.16228e-14 h2 = 5.10022e-15
+
+Saving results to result60
+1100 1100
+h1 = 2.05936e-14 h2 = 2.05936e-14
+
+Saving results to result61
+1100 1200
+h1 = 2.05936e-14 h2 = 1.39214e-14
+
+Saving results to result62
+1100 1300
+h1 = 2.05936e-14 h2 = 9.7108e-15
+
+Saving results to result63
+1100 1400
+h1 = 2.05936e-14 h2 = 6.95703e-15
+
+Saving results to result64
+1100 1500
+h1 = 2.05936e-14 h2 = 5.10022e-15
+
+Saving results to result65
+1200 1200
+h1 = 1.39214e-14 h2 = 1.39214e-14
+
+Saving results to result66
+1200 1300
+h1 = 1.39214e-14 h2 = 9.7108e-15
+
+Saving results to result67
+1200 1400
+h1 = 1.39214e-14 h2 = 6.95703e-15
+
+Saving results to result68
+1200 1500
+h1 = 1.39214e-14 h2 = 5.10022e-15
+
+Saving results to result69
+1300 1300
+h1 = 9.7108e-15 h2 = 9.7108e-15
+
+Saving results to result70
+1300 1400
+h1 = 9.7108e-15 h2 = 6.95703e-15
+
+Saving results to result71
+1300 1500
+h1 = 9.7108e-15 h2 = 5.10022e-15
+
+Saving results to result72
+1400 1400
+h1 = 6.95703e-15 h2 = 6.95703e-15
+
+Saving results to result73
+

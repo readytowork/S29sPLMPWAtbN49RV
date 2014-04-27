@@ -43,9 +43,10 @@ int main( int argc, char* argv[])
   int nFFT, nCylicPrefix;
 
   //Read arg Simple
-  if( argc == 3) {
+  if( argc == 4) {
     Number_of_bits = atoi( argv[1]);
-    dist_2 = strtod(argv[2], NULL);
+    dist_1 = strtod(argv[2], NULL);
+    dist_2 = strtod(argv[3], NULL);
   }
 
   //Declare vectors and others
@@ -61,7 +62,9 @@ int main( int argc, char* argv[])
   cvec ofdm_symbols_1, ofdm_symbols_2;
 
   // Declarations of classes:
-  QPSK qpsk;                     //The QPSK modulator class
+  QPSK mod;                     //The QPSK modulator class
+  QAM qammod(16);                 //QAM-16
+  //QAM mod(64);                 //   -64
   AWGN_Channel awgn_channel;     //The AWGN channel class
   it_file ff;                    //For saving the results to file
   BERC berc;                     //Used to count the bit errors
@@ -74,7 +77,6 @@ int main( int argc, char* argv[])
   vec ch_imp_response_real = "1.000000000000000 0.436232649307735 0.198694326007661";//randray( ch_nb_taps);
   ch_imp_response_real /= sqrt(sum_sqr( ch_imp_response_real));//normalized power profile
   cvec ch_imp_response = to_cvec( ch_imp_response_real);
-  cout << ch_imp_response << endl;
   multipath_channel.set_coeffs( ch_imp_response);
   multipath_channel.set_state(ini_state);//inital state is zero
 
@@ -82,11 +84,11 @@ int main( int argc, char* argv[])
   tt.tic();
 
   //Init:
-  //Ps = 5 * pow(10, -3);          //The transmitted energy per QPSK symbol is 1, 5e-3 W/MHz 802.11
+  //Ps = 5 * pow(10, -3);          //The transmitted energy per mod symbol is 1, 5e-3 W/MHz 802.11
   Ps = 4 * pow(10, 0.0);         //ETSI TS 136 104 V9.4.0 (2010-07) p17 LTE JAPAN 4 W/MHz  
   //Ps = 4 * pow(10, 1.0);         //max 46 dbm
   N0 = 4 * pow(10, -15);         //Thermal noise -144dBm/MHz
-  dist_1 = 800;                   //Distance form transmitter to receiver 1 (meter)
+  //dist_1 = 800;                   //Distance form transmitter to receiver 1 (meter)
   //dist_2 = 1000;                  //                   *                  2
   double f = 2600; // Mhz 150-1500
   double hM = 2; // meter 1-10
@@ -94,15 +96,15 @@ int main( int argc, char* argv[])
   double C_H = 0.8 + (1.1 * log10(f) - 0.7) * hM - 1.56 * log10(f); // Hata medium size city
   double h1dB = 69.55 + 26.16 * log10(f) - 13.82*log10(hb) - C_H + (44.9 - 6.55*log10(hb)) * log10(dist_1/1000);
   double h2dB = 69.55 + 26.16 * log10(f) - 13.82*log10(hb) - C_H + (44.9 - 6.55*log10(hb)) * log10(dist_2/1000);
-  cout << "HatadB:" << h1dB << endl;
-  cout << "HatadB:" << h2dB << endl;
+  //cout << "HatadB:" << h1dB << endl;
+  //cout << "HatadB:" << h2dB << endl;
   
-  h1 = pow(10, -h1dB/10);
-  h2 = pow(10, -h2dB/10);
-  //h1 = pow(dist_1, -4.5);        //Channel gain for receiver 1
-  //h2 = pow(dist_2, -4.5);        //
+  //h1 = pow(10, -h1dB/10);
+  //h2 = pow(10, -h2dB/10);
+  h1 = pow(dist_1, -4.5);        //Channel gain for receiver 1
+  h2 = pow(dist_2, -4.5);        //
   cout << "h1 = " << h1 << " h2 = " << h2 << endl;
-  alpha = linspace(0.5, 0.0, 21);//Simulate for different weight on power
+  alpha = linspace(0.3, 0.0, 13);//Simulate for different weight on power
   nFFT = 2048;                   //FFT size, default is 2048 LTE-a
   nCylicPrefix = 144;            //Length of Prefix, standard 144 (first prefix is different in real case)
 
@@ -149,8 +151,8 @@ int main( int argc, char* argv[])
   for (i = 0; i < alpha.length(); i++) {
 
     //Show how the simulation progresses:
-    cout << "Now simulating alpha value = " << alpha(i); 
-    cout << " # " << i + 1 << "/" << alpha.length() << endl;
+    //cout << "Now simulating alpha value = " << alpha(i); 
+    //cout << " # " << i + 1 << "/" << alpha.length() << endl;
 
     //Generate a vector of random bits to transmit:
     transmitted_bits_1 = randb(Number_of_bits);
@@ -162,9 +164,9 @@ int main( int argc, char* argv[])
     bvec out_binary_1 = transmitted_bits_1;
     bvec out_binary_2 = transmitted_bits_2;
 
-    //Modulate the bits to QPSK symbols:
-    transmitted_symbols_1 = qpsk.modulate_bits(out_binary_1);
-    transmitted_symbols_2 = qpsk.modulate_bits(out_binary_2);
+    //Modulate the bits to mod symbols:
+    transmitted_symbols_1 = qammod.modulate_bits(out_binary_1);
+    transmitted_symbols_2 = mod.modulate_bits(out_binary_2);
 
     //Multiplex two signals
     transmitted_symbols = transmitted_symbols_1 * pow(alpha(i), 0.5) + transmitted_symbols_2 * pow(1 - alpha(i), 0.5);
@@ -184,27 +186,27 @@ int main( int argc, char* argv[])
     //Set the noise variance of the AWGN channel:
     //ofdm_symbols_1 = concat(ofdm_symbols_1, zeros_c(2)); //B
     //ofdm_symbols_2 = concat(ofdm_symbols_2, zeros_c(2)); //B
-    ofdm_symbols_1 = concat(ofdm_symbols_1, zeros_c(4));   //A
-    ofdm_symbols_2 = concat(ofdm_symbols_2, zeros_c(4));   //A
+    //ofdm_symbols_1 = concat(ofdm_symbols_1, zeros_c(4));   //A
+    //ofdm_symbols_2 = concat(ofdm_symbols_2, zeros_c(4));   //A
     //cout << "N0: " << N0 << endl;
     awgn_channel.set_noise(N0);
 
     //Up-conversion
 
     //Run the transmited symbols through the channel using the () operator:
-    ofdm_symbols_1 = awgn_channel( multipath_channel( ofdm_symbols_1));
-    ofdm_symbols_2 = awgn_channel( multipath_channel( ofdm_symbols_2));
-    //ofdm_symbols_1 = awgn_channel( ofdm_symbols_1);
-    //ofdm_symbols_2 = awgn_channel( ofdm_symbols_2);
+    //ofdm_symbols_1 = awgn_channel( multipath_channel( ofdm_symbols_1));
+    //ofdm_symbols_2 = awgn_channel( multipath_channel( ofdm_symbols_2));
+    ofdm_symbols_1 = awgn_channel( ofdm_symbols_1);
+    ofdm_symbols_2 = awgn_channel( ofdm_symbols_2);
     //ofdm_symbols_1 = ofdm_symbols_1.get(0, ofdm_symbols_1.length()-3);    //B
     //ofdm_symbols_2 = ofdm_symbols_2.get(0, ofdm_symbols_2.length()-3);    //B
 
     // test zone!! KEEP OUT!! //A
-    cvec ofdm_symbols_eqed_tmp;
+    /*cvec ofdm_symbols_eqed_tmp;
     mmse_equalizer_simple(ofdm_symbols_1, ofdm_symbols_eqed_tmp, ch_imp_response_real, N0, false);
     ofdm_symbols_1 = ofdm_symbols_eqed_tmp;
     mmse_equalizer_simple(ofdm_symbols_2, ofdm_symbols_eqed_tmp, ch_imp_response_real, N0, false);
-    ofdm_symbols_2 = ofdm_symbols_eqed_tmp;
+    ofdm_symbols_2 = ofdm_symbols_eqed_tmp;*/
 
     //alpha no greater than 0.5
     //OFDM demodulate
@@ -216,25 +218,25 @@ int main( int argc, char* argv[])
     //FDE(received_symbols_2, FDMtmp, ch_imp_response_real, 2048, false);   //B
     //ofdm_symbols_2 = FDMtmp;                                              //B
 
-    //Demodulate the received QPSK symbols into received bits: Layer 1
-    received_bits_2 = qpsk.demodulate_bits(received_symbols_2);
+    //Demodulate the received mod symbols into received bits: Layer 1
+    received_bits_2 = mod.demodulate_bits(received_symbols_2 / pow(1-alpha(i), 0.5) / pow(Ps, 0.5) / pow(h2, 0.5));
     //bvec out_binary_recover_2 = decode(nsc, constraint_length, received_bits_2, blockSize, false);
     bvec out_binary_recover_2 = received_bits_2;
     
-    //Demodulate the received QPSK symbols into received bits: Layer 2
-    received_bits_1 = qpsk.demodulate_bits(received_symbols_1);
-    feedback_symbols_2 = pow(Ps * (1-alpha(i)) * h1, 0.5) * qpsk.modulate_bits(received_bits_1);
-    received_bits_1 = qpsk.demodulate_bits(received_symbols_1 - feedback_symbols_2);
+    //Demodulate the received mod symbols into received bits: Layer 2
+    received_bits_1 = mod.demodulate_bits(received_symbols_1 / pow(1-alpha(i), 0.5) / pow(Ps, 0.5) / pow(h1, 0.5));
+    feedback_symbols_2 = pow(Ps * (1-alpha(i)) * h1, 0.5) * mod.modulate_bits(received_bits_1);
+    received_bits_1 = qammod.demodulate_bits((received_symbols_1-feedback_symbols_2) / pow(alpha(i), 0.5) / pow(Ps, 0.5) / pow(h1, 0.5));
     //bvec out_binary_recover_1 = decode(nsc, constraint_length, received_bits_1, blockSize, false);
     bvec out_binary_recover_1 = received_bits_1;
 
     //Calculate the bit error rate:
     berc.clear();                               //Clear the bit error rate counter
-    berc.count(transmitted_bits_2, out_binary_recover_2); //Count the bit errors
+    berc.count(transmitted_bits_2, out_binary_recover_2.get(0, Number_of_bits)); //Count the bit errors
     bit_error_rate_2(i) = berc.get_errorrate();   //Save the estimated BER in the result vector
 
     berc.clear();
-    berc.count(transmitted_bits_1, out_binary_recover_1);
+    berc.count(transmitted_bits_1, out_binary_recover_1.get(0, Number_of_bits));
     bit_error_rate_1(i) = berc.get_errorrate();
   }
 
@@ -255,13 +257,25 @@ int main( int argc, char* argv[])
   time_t rawtime;
   time (&rawtime);
   std::string nowTime( ctime( &rawtime));
-  cout << nowTime << endl;
+  /*cout << nowTime << endl;
   cout << "alpha = " << alpha << " " << endl;
   cout << "BER 1 = " << bit_error_rate_1 << endl;
   cout << "BER 2 = " << bit_error_rate_2 << endl;
   cout << "Theoretical BER 1 = " << ber_theo_1 << endl;
   cout << "Theoretical BER 2 = " << ber_theo_2 << endl;
-  cout << endl;
+  cout << endl;*/
+  
+  //Chech feasibility
+  bool feasibility = false;
+  double threshold = 0.01;
+  for (size_t i = 1; i < alpha.length(); i++) {
+    if (bit_error_rate_1(i) < threshold && bit_error_rate_2(i) < threshold) {
+      feasibility = true;
+    }
+  }
+  if (feasibility) {
+    cout << "  PASS  " << endl;
+  }
 
   //Save the results to file:
   const char xFilename[] = "result";
@@ -367,8 +381,13 @@ bvec decode(Convolutional_Code& nsc, int constraint_length, const bvec& decoder_
 void zero_pad_back(cvec& vec_in, int m_in)
 {
   int quotient = vec_in.length() / m_in;
-  int n_remainder = (quotient + 1) * m_in - vec_in.length();
-  vec_in = concat(vec_in, zeros_c(n_remainder));
+  if (quotient*m_in == vec_in.length()) {
+    return;
+  }
+  else {
+    int n_remainder = (quotient + 1) * m_in - vec_in.length();
+    vec_in = concat(vec_in, zeros_c(n_remainder));
+  }
 }
 
 void mmse_equalizer_simple(cvec& sig_in, cvec& sig_out, vec& channel_est, double noise_var, bool verbose)

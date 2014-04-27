@@ -273,6 +273,9 @@ int main()
     } // End FDE
     
     // ITU Pedestrian A channel
+    if (verbose)
+    {
+    
     double Ts = 3.25521e-08;
     Channel_Specification channel_spec(ITU_Pedestrian_A);
     TDL_Channel my_channel(channel_spec, Ts);
@@ -282,6 +285,14 @@ int main()
     cout << my_channel.taps() << endl;
     my_channel.generate(1,coeff);
     cout << coeff << endl;
+    
+    } // end ITU channel model
+    
+    QAM qam16(16);
+    bvec testbin = "0 0 0 1 0 1 1 0 0 0 1 1 1 1 0 0 0 0 0 1 1 1 1 1 1";
+    cvec testo = qam16.modulate_bits(testbin);
+    bvec rcvdtest = qam16.demodulate_bits(testo);
+    cout << rcvdtest << endl;
     return 0;
 
     //Modulate the bits to QPSK symbols:
