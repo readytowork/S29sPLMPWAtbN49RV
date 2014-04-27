@@ -15,7 +15,7 @@
 
 clear
 N  = 10^6; % number of bits or symbols
-Eb_N0_dB = [15]; % multiple Eb/N0 values
+Eb_N0_dB = [0:15]; % multiple Eb/N0 values
 K = 3;
 
 for ii = 1:length(Eb_N0_dB)
@@ -26,7 +26,7 @@ for ii = 1:length(Eb_N0_dB)
 
    % Channel model, multipath channel
    nTap = 3;
-   ht = [0.2 0.9 0.3]; 
+   ht = [1 0.8 0.64]; 
    L  = length(ht);
 
    chanOut = conv(s,ht);  

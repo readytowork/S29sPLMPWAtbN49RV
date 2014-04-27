@@ -165,6 +165,8 @@ int main()
     }
     
     // linear mmse test
+    if (verbose) {
+    
     cvec sig_test = "9.07032e-08-1.03701e-07i 3.13527e-07-7.27227e-08i -1.67824e-07-4.22301e-07i 1.3437e-07-2.14683e-08i -1.5889e-07+1.45796e-07i -2.84262e-07+4.55597e-08i 2.67125e-07+5.13786e-07i -2.85874e-07+1.4919e-07i";
     sig_test = concat(sig_test, zeros_c(4));
     vec ht = "1.0 1.0 0.0";
@@ -227,6 +229,59 @@ int main()
     cvec sig_eqed = equalizer(sig_rcvd);
     cvec ans = sig_eqed.get(4, sig_eqed.length()-1);
     cout << "ANS: " << ans << endl;
+    
+    } // END
+    
+    //FDE
+    if (verbose) {
+    
+    MA_Filter<std::complex<double>, std::complex<double>, std::complex<double> > testchannel;
+    vec ht = "1 0.9";
+    testchannel.set_coeffs( to_cvec(ht));
+    testchannel.set_state(to_cvec( zeros(2)));
+    cvec testCase = "1 1 1 1 1 0";
+    cout << testchannel(testCase) << endl;
+    
+    OFDM ofdm;
+    ofdm.set_parameters(64,16,1);
+    cvec input_symbol = "0 0 0 0 0 0 1 1 1 -1 -1 -1 -1 1 -1 -1 -1 -1 -1 1 -1 -1 -1 -1 -1 -1 1 1 1 -1 -1 1 0 -1 -1 1 1 1 1 -1 1 -1 -1 1 1 1 1 1 -1 -1 -1 1 1 -1 -1 1 1 1 1 0 0 0 0 0";
+    cvec symbol_t;
+    cout << "input_symbol:\n" << input_symbol << endl;
+    //input_symbol = concat(input_symbol.mid(input_symbol.length()/2, input_symbol.length()/2), input_symbol.mid(0, input_symbol.length()/2)); // fftshift
+    ofdm.modulate(input_symbol, symbol_t);
+    symbol_t = concat(symbol_t, zeros_c(1));
+    cout << "symbol_t:\n" << symbol_t << endl;
+    cout << symbol_t.length() << endl;
+    cvec sig_rcvd_t = testchannel(symbol_t);
+    //sig_rcvd_t = sig_rcvd_t.get(0, sig_rcvd_t.length()-2);  //MARk
+    cout << "channel:\n" << sig_rcvd_t << endl << sig_rcvd_t.length() << endl;
+    sig_rcvd_t = sig_rcvd_t.get(0, 79);
+    cout << "channel:\n" << sig_rcvd_t << endl;
+    
+    cvec para = fft(to_cvec(concat(ht, zeros(62))));
+    //para = concat(para.mid(32, 32), para.mid(0, 32));
+    cout << "para\n" << para << endl;
+    cvec symbol_t_de;
+    ofdm.demodulate(sig_rcvd_t, symbol_t_de);
+    //symbol_t_de = concat(symbol_t_de.mid(32, 32), symbol_t_de.mid(0, 32));
+    cout << "demdul:\n" << symbol_t_de << endl;
+    for (int j = 0; j < 64; j++) {
+      symbol_t_de[j] /= para[j];
+    }
+    cout << "ans:" << symbol_t_de << endl;
+    
+    } // End FDE
+    
+    // ITU Pedestrian A channel
+    double Ts = 3.25521e-08;
+    Channel_Specification channel_spec(ITU_Pedestrian_A);
+    TDL_Channel my_channel(channel_spec, Ts);
+    my_channel.set_norm_doppler(0.01);
+    my_channel.set_doppler_spectrum(0, Jakes);
+    cmat coeff;
+    cout << my_channel.taps() << endl;
+    my_channel.generate(1,coeff);
+    cout << coeff << endl;
     return 0;
 
     //Modulate the bits to QPSK symbols:
@@ -320,6 +375,7 @@ double eval_avg_power(const cvec& symbol_vec)
   }
   return average_power;
 }
+
 
 
 

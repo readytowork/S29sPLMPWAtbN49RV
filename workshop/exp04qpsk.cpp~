@@ -27,6 +27,7 @@ bvec encode(Convolutional_Code& nsc, int constraint_length, const bvec& encoder_
 bvec decode(Convolutional_Code& nsc, int constraint_length, const bvec& decoder_input, int blockSize, bool verbose);
 void zero_pad_back(cvec& vec_in, int m_in);
 void mmse_equalizer_simple(cvec& sig_in, cvec& sig_out, vec& channel_est, double noise_var, bool verbose);
+void FDE(cvec& signal_in, cvec& signal_out, vec& imp_response, int ifftSize, bool verbose);
 
 int main( int argc, char* argv[])
 {
@@ -65,7 +66,7 @@ int main( int argc, char* argv[])
   MA_Filter<std::complex<double>, std::complex<double>, std::complex<double> > multipath_channel; //Simulate multi-path enviornment
   int ch_nb_taps = 3;
   cvec ini_state = to_cvec( zeros(ch_nb_taps));
-  vec ch_imp_response_real = "1.0  0.79432 0.63095";//randray( ch_nb_taps);
+  vec ch_imp_response_real = "1.000000000000000 0.436232649307735 0.198694326007661";//randray( ch_nb_taps);
   ch_imp_response_real /= sqrt(sum_sqr( ch_imp_response_real));//normalized power profile
   cvec ch_imp_response = to_cvec( ch_imp_response_real);
   cout << ch_imp_response << endl;
@@ -76,12 +77,25 @@ int main( int argc, char* argv[])
   tt.tic();
 
   //Init:
-  Ps = 5 * pow(10, -3);          //The transmitted energy per QPSK symbol is 1, 5e-3 W/MHz
+  //Ps = 5 * pow(10, -3);          //The transmitted energy per QPSK symbol is 1, 5e-3 W/MHz 802.11
+  Ps = 1 * pow(10, 0.0);         //ETSI TS 136 104 V9.4.0 (2010-07) p17 LTE JAPAN 4 W/MHz  
+  //Ps = 4 * pow(10, 1.0);         //max 46 dbm
   N0 = 4 * pow(10, -15);         //Thermal noise -144dBm/MHz
-  dist_1 = 50;                  //Distance form transmitter to receiver 1 (meter)
-  dist_2 = 100;                  //                   *                  2
-  h1 = pow(dist_1, -4.5);        //Channel gain for receiver 1
-  h2 = pow(dist_2, -4.5);        //
+  dist_1 = 200;                   //Distance form transmitter to receiver 1 (meter)
+  dist_2 = 400;                  //                   *                  2
+  double f = 2600; // Mhz 150-1500
+  double hM = 2; // meter 1-10
+  double hb = 120; // meter 30-200
+  double C_H = 0.8 + (1.1 * log10(f) - 0.7) * hM - 1.56 * log10(f); // Hata medium size city
+  double h1dB = 69.55 + 26.16 * log10(f) - 13.82*log10(hb) - C_H + (44.9 - 6.55*log10(hb)) * log10(dist_1/1000);
+  double h2dB = 69.55 + 26.16 * log10(f) - 13.82*log10(hb) - C_H + (44.9 - 6.55*log10(hb)) * log10(dist_2/1000);
+  cout << "HatadB:" << h1dB << endl;
+  cout << "HatadB:" << h2dB << endl;
+  
+  h1 = pow(10, -h1dB/10);
+  h2 = pow(10, -h2dB/10);
+  //h1 = pow(dist_1, -4.5);        //Channel gain for receiver 1
+  //h2 = pow(dist_2, -4.5);        //
   cout << "h1 = " << h1 << " h2 = " << h2 << endl;
   alpha = linspace(0.5, 0.0, 21);//Simulate for different weight on power
   nFFT = 2048;                   //FFT size, default is 2048 LTE-a
@@ -140,8 +154,6 @@ int main( int argc, char* argv[])
     //convolutional code encode
     bvec out_binary_1 = encode(nsc, constraint_length, transmitted_bits_1, blockSize, false);
     bvec out_binary_2 = encode(nsc, constraint_length, transmitted_bits_2, blockSize, false);
-    
-    //nsc.encode_tail(transmitted_bits_1, nsc_coded_bits);//tail is added here to information bits to close the trellis
 
     //Modulate the bits to QPSK symbols:
     transmitted_symbols_1 = qpsk.modulate_bits(out_binary_1);
@@ -163,11 +175,10 @@ int main( int argc, char* argv[])
     ofdm.modulate(transmitted_symbols_2, ofdm_symbols_2);
 
     //Set the noise variance of the AWGN channel:
-    //ivec testIdx = "0 1 2 3 4 5 6 7";
-    //cout << ofdm_symbols_2(testIdx) << endl;
-    //ofdm_symbols_2 = "9.07032e-08-1.03701e-07i 3.13527e-07-7.27227e-08i -1.67824e-07-4.22301e-07i 1.3437e-07-2.14683e-08i -1.5889e-07+1.45796e-07i -2.84262e-07+4.55597e-08i 2.67125e-07+5.13786e-07i -2.85874e-07+1.4919e-07i";
-    ofdm_symbols_1 = concat(ofdm_symbols_1, zeros_c(4));
-    ofdm_symbols_2 = concat(ofdm_symbols_2, zeros_c(4));
+    //ofdm_symbols_1 = concat(ofdm_symbols_1, zeros_c(2)); //B
+    //ofdm_symbols_2 = concat(ofdm_symbols_2, zeros_c(2)); //B
+    ofdm_symbols_1 = concat(ofdm_symbols_1, zeros_c(4));   //A
+    ofdm_symbols_2 = concat(ofdm_symbols_2, zeros_c(4));   //A
     //cout << "N0: " << N0 << endl;
     awgn_channel.set_noise(N0);
 
@@ -178,21 +189,25 @@ int main( int argc, char* argv[])
     ofdm_symbols_2 = awgn_channel( multipath_channel( ofdm_symbols_2));
     //ofdm_symbols_1 = awgn_channel( ofdm_symbols_1);
     //ofdm_symbols_2 = awgn_channel( ofdm_symbols_2);
+    //ofdm_symbols_1 = ofdm_symbols_1.get(0, ofdm_symbols_1.length()-3);    //B
+    //ofdm_symbols_2 = ofdm_symbols_2.get(0, ofdm_symbols_2.length()-3);    //B
 
-    // test zone!! KEEP OUT!!
-    //cout << ofdm_symbols_2 << endl;
+    // test zone!! KEEP OUT!! //A
     cvec ofdm_symbols_eqed_tmp;
     mmse_equalizer_simple(ofdm_symbols_1, ofdm_symbols_eqed_tmp, ch_imp_response_real, N0, false);
     ofdm_symbols_1 = ofdm_symbols_eqed_tmp;
     mmse_equalizer_simple(ofdm_symbols_2, ofdm_symbols_eqed_tmp, ch_imp_response_real, N0, false);
     ofdm_symbols_2 = ofdm_symbols_eqed_tmp;
-    //cout << ofdm_symbols_2 << endl;
-	//return 0;
 
     //alpha no greater than 0.5
     //OFDM demodulate
     ofdm.demodulate(ofdm_symbols_1, received_symbols_1);
     ofdm.demodulate(ofdm_symbols_2, received_symbols_2);
+    //cvec FDMtmp;                                                          //B
+    //FDE(received_symbols_1, FDMtmp, ch_imp_response_real, 2048, false);   //B
+    //ofdm_symbols_1 = FDMtmp;                                              //B
+    //FDE(received_symbols_2, FDMtmp, ch_imp_response_real, 2048, false);   //B
+    //ofdm_symbols_2 = FDMtmp;                                              //B
 
     //Demodulate the received QPSK symbols into received bits: Layer 1
     received_bits_2 = qpsk.demodulate_bits(received_symbols_2);
@@ -401,7 +416,6 @@ void mmse_equalizer_simple(cvec& sig_in, cvec& sig_out, vec& channel_est, double
       c_mmse[j] = dot(inv_hM.get_col(j),d);
     }
     if (verbose) {cout << "c MMSE: " << c_mmse << endl;}
-    cout << "c MMSE: " << c_mmse << endl;
     
     MA_Filter<std::complex<double>, std::complex<double>, std::complex<double> > equalizer;
     equalizer.set_coeffs( to_cvec(c_mmse));
@@ -411,6 +425,24 @@ void mmse_equalizer_simple(cvec& sig_in, cvec& sig_out, vec& channel_est, double
     //if (verbose) cout << "ANS: " << ans << endl;
     
     sig_out = ans;
+}
+
+void FDE(cvec& signal_in, cvec& signal_out, vec& imp_response, int ifftSize, bool verbose)
+{
+  cvec para = fft(to_cvec(concat(imp_response, zeros(ifftSize-imp_response.length()))));
+  if (verbose) {cout << "para: \n" << para << endl;}
+  
+  int nSymbols = signal_in.length() / ifftSize;
+  it_assert(nSymbols * ifftSize == signal_in.length(), "warning");
+  
+  signal_out = zeros_c(signal_in.length());
+  int IdxSig = 0;
+  for (int i = 0; i < nSymbols; i++) {
+    for (int j = 0; j < ifftSize; j++) {
+      signal_out[IdxSig] = signal_in[IdxSig] / para[j];
+      IdxSig++;
+    }
+  }
 }
 
 

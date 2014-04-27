@@ -1,9 +1,9 @@
 /*
-Title       : Experiment 4
+Title       : Experiment 6
 Project     : Mtk 5th generation communication system
 Author      : Ming Jie Yang
 Date        : 
-Description : 
+Description : For presentation 0429 exp02
               
               
               
@@ -13,6 +13,7 @@ Description :
 #include <itpp/itcomm.h>
 #include <ctime>
 #include <cstring>
+#include <cstdlib>
 
 using namespace itpp;
 
@@ -34,16 +35,20 @@ int main( int argc, char* argv[])
   //Arg initial here
   int Number_of_bits = 2048;
 
-  //Read arg Simple
-  if( argc == 2) Number_of_bits = atoi( argv[1]);
-
-  //Declarations of scalars and vectors:
+  //Declarations basic
   int i;
   double Ps, N0, dist_1, dist_2, h1, h2, Eb;
   double EbN0;
   double rcvd_power_1, rcvd_power_2;
   int nFFT, nCylicPrefix;
 
+  //Read arg Simple
+  if( argc == 3) {
+    Number_of_bits = atoi( argv[1]);
+    dist_2 = strtod(argv[2], NULL);
+  }
+
+  //Declare vectors and others
   vec alpha;                                            //vec is a vector containing double
   vec bit_error_rate_1, bit_error_rate_2;
   vec ber_theo_1, ber_theo_2;                           // Theoretical results for multiple access
@@ -81,8 +86,8 @@ int main( int argc, char* argv[])
   Ps = 4 * pow(10, 0.0);         //ETSI TS 136 104 V9.4.0 (2010-07) p17 LTE JAPAN 4 W/MHz  
   //Ps = 4 * pow(10, 1.0);         //max 46 dbm
   N0 = 4 * pow(10, -15);         //Thermal noise -144dBm/MHz
-  dist_1 = 1000;                   //Distance form transmitter to receiver 1 (meter)
-  dist_2 = 2000;                  //                   *                  2
+  dist_1 = 800;                   //Distance form transmitter to receiver 1 (meter)
+  //dist_2 = 1000;                  //                   *                  2
   double f = 2600; // Mhz 150-1500
   double hM = 2; // meter 1-10
   double hb = 120; // meter 30-200
@@ -152,8 +157,10 @@ int main( int argc, char* argv[])
     transmitted_bits_2 = randb(Number_of_bits);
 
     //convolutional code encode
-    bvec out_binary_1 = encode(nsc, constraint_length, transmitted_bits_1, blockSize, false);
-    bvec out_binary_2 = encode(nsc, constraint_length, transmitted_bits_2, blockSize, false);
+    //bvec out_binary_1 = encode(nsc, constraint_length, transmitted_bits_1, blockSize, false);
+    //bvec out_binary_2 = encode(nsc, constraint_length, transmitted_bits_2, blockSize, false);
+    bvec out_binary_1 = transmitted_bits_1;
+    bvec out_binary_2 = transmitted_bits_2;
 
     //Modulate the bits to QPSK symbols:
     transmitted_symbols_1 = qpsk.modulate_bits(out_binary_1);
@@ -211,13 +218,15 @@ int main( int argc, char* argv[])
 
     //Demodulate the received QPSK symbols into received bits: Layer 1
     received_bits_2 = qpsk.demodulate_bits(received_symbols_2);
-    bvec out_binary_recover_2 = decode(nsc, constraint_length, received_bits_2, blockSize, false);
+    //bvec out_binary_recover_2 = decode(nsc, constraint_length, received_bits_2, blockSize, false);
+    bvec out_binary_recover_2 = received_bits_2;
     
     //Demodulate the received QPSK symbols into received bits: Layer 2
     received_bits_1 = qpsk.demodulate_bits(received_symbols_1);
     feedback_symbols_2 = pow(Ps * (1-alpha(i)) * h1, 0.5) * qpsk.modulate_bits(received_bits_1);
     received_bits_1 = qpsk.demodulate_bits(received_symbols_1 - feedback_symbols_2);
-    bvec out_binary_recover_1 = decode(nsc, constraint_length, received_bits_1, blockSize, false);
+    //bvec out_binary_recover_1 = decode(nsc, constraint_length, received_bits_1, blockSize, false);
+    bvec out_binary_recover_1 = received_bits_1;
 
     //Calculate the bit error rate:
     berc.clear();                               //Clear the bit error rate counter
