@@ -58,7 +58,7 @@ set(gca, 'yScale', 'linear',...
     'yLim', [1 1.6]);
 L = legend('PL Ratio = 10', '100', '1000', '10000');
 set(L,'FontSize',14);
-xlabel('\alpha','FontSize',14,'Color','k');
+xlabel('Power allocation factor (\alpha)','FontSize',14,'Color','k');
 ylabel('Gain of Weighted Sum','FontSize',14,'Color','k');
 set(gca,'fontsize',14);
 box on;
