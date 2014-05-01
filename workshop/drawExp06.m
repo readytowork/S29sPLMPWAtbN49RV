@@ -1,6 +1,7 @@
 % collect and plot for exp06
 close all;
 FILE = {'./output2.txt', './output1.txt', './output.txt'};
+COLOR = {'r', 'g', 'b'};
 MARK = {'o', 'o', 'o'};
 fg = 1;
 container = {[] [] []};
@@ -14,7 +15,8 @@ for i = 1:size(FILE,2)
 %             hold on;
         end
     end
-    plot(dat(container{i},1),dat(container{i},2),'*','Marker',MARK{i},'LineWidth',3,'Color',[i/size(FILE,2) 0 0]);
+%     plot(dat(container{i},1),dat(container{i},2),'*','Marker',MARK{i},'LineWidth',3,'Color',[i/size(FILE,2) 0 0]);
+    plot(dat(container{i},1),dat(container{i},2),'*','Marker',MARK{i},'LineWidth',3,'Color',COLOR{i});
     hold on;
 end
 set(gca, 'yScale', 'linear', 'yMinorTick','on');
