@@ -1,0 +1,54 @@
+\documentclass[conference,a4paper]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{textcomp}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{color}
+\usepackage[tableposition=top]{caption}
+\usepackage{setspace}
+\usepackage{epstopdf}
+\usepackage{graphics}
+
+\begin{document}
+\title{Investigation over NOMA with SIC in single antenna scheme}
+
+\author{
+\authorblockN{Ming Jie Yang}\\
+\authorblockA{
+GICE, National Taiwan University\\
+Taipei, R.O.C\\
+R02942125@ntu.edu.tw\\
+2014 May 9th}
+}
+%\IEEEspecialpapernotice{{\fontsize{12pt}{1em}\selectfont February 2014}}
+\maketitle
+
+% abstract
+\begin{abstract}
+\input{abstract.tex}
+\end{abstract}
+
+% describe project motivation, objectives and related works in details
+\input{introduction.tex}
+
+% ideal mathematical model explanation.
+\input{sic_model.tex}
+
+% simulations
+\input{simulation.tex}
+\input{system_architecture.tex}
+\input{numerical_result.tex}
+\input{power_alloc.tex}
+\input{pair_selection.tex}
+\input{conclusion.tex}
+\input{future_work.tex}
+
+% citations
+\bibliographystyle{IEEEtran}
+\bibliography{cite}
+
+\end{document}
