@@ -1,0 +1,22 @@
+1.
+	A Node has only one Transmitter and Receiver.
+1.1
+	A Transmitter or Receiver may have more than one Antennas.
+2. 
+	An Antenna transmit Time-domain Signal samples into Channel that User specified.
+3. 
+	The transmitted signal is calcuated and processed by Blocks.
+4. 
+	Each Block is responsible of a certain function such as generating binary data, 
+	Encoding, IFFT and etc.
+5. 
+	Every Block is configured by Users before any signal is processed.
+6. 
+	Every Block has input interfaces and output interfaces, and Blocks are connected
+	by Users when a specific kind of Node is created.
+7. 
+	The Channel is shared by all Nodes with no exception.
+8.
+	An antenna received Time-domain signals from Channel and pass it to Receiver.
+9.
+	Signals is passed and processed by Blocks or Channel
