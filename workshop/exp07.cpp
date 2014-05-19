@@ -116,7 +116,7 @@ int main( int argc, char* argv[])
   // Declarations for equalizer & NSC coding
   ivec gen = "07 05";                                          //octal notation
   int constraint_length = 3;                                   //constraint length
-  int blockSize = 13;//permutation length                //encoder output block size
+  int blockSize = 64;//permutation length                //encoder output block size
   // other parameters
   int nb_bits_tail = blockSize / gen.length();                  //encoder input size + tail size
   int nb_bits = nb_bits_tail - (constraint_length - 1);        //encoder block size
@@ -167,7 +167,7 @@ int main( int argc, char* argv[])
     //Fading
     transmitted_symbols_1 = transmitted_symbols * pow(h1, 0.5);
     transmitted_symbols_2 = transmitted_symbols * pow(h2, 0.5);
-
+    
     //OFDM modulate
     zero_pad_back(transmitted_symbols_1, 2048);
     zero_pad_back(transmitted_symbols_2, 2048);
@@ -187,6 +187,8 @@ int main( int argc, char* argv[])
     //Run the transmited symbols through the channel using the () operator:
     ofdm_symbols_1 = awgn_channel( multipath_channel( ofdm_symbols_1));
     ofdm_symbols_2 = awgn_channel( multipath_channel( ofdm_symbols_2));
+    //ofdm_symbols_1 = multipath_channel( ofdm_symbols_1);
+    //ofdm_symbols_2 = multipath_channel( ofdm_symbols_2);
     //ofdm_symbols_1 = awgn_channel( ofdm_symbols_1);
     //ofdm_symbols_2 = awgn_channel( ofdm_symbols_2);
     //ofdm_symbols_1 = ofdm_symbols_1.get(0, ofdm_symbols_1.length()-3);    //B
@@ -203,11 +205,12 @@ int main( int argc, char* argv[])
     //OFDM demodulate
     ofdm.demodulate(ofdm_symbols_1, received_symbols_1);
     ofdm.demodulate(ofdm_symbols_2, received_symbols_2);
-    //cvec FDMtmp;                                                          //B
-    //FDE(received_symbols_1, FDMtmp, ch_imp_response_real, 2048, false);   //B
-    //ofdm_symbols_1 = FDMtmp;                                              //B
-    //FDE(received_symbols_2, FDMtmp, ch_imp_response_real, 2048, false);   //B
-    //ofdm_symbols_2 = FDMtmp;                                              //B
+    
+    /*cvec FDMtmp;                                                          //B
+    FDE(received_symbols_1, FDMtmp, ch_imp_response_real, 2048, false);   //B
+    received_symbols_1 = FDMtmp;                                              //B
+    FDE(received_symbols_2, FDMtmp, ch_imp_response_real, 2048, false);   //B
+    received_symbols_2 = FDMtmp;       */
 
     //Demodulate the received QPSK symbols into received bits: Layer 1
     received_bits_2 = qpsk.demodulate_bits(received_symbols_2);
@@ -439,7 +442,7 @@ void FDE(cvec& signal_in, cvec& signal_out, vec& imp_response, int ifftSize, boo
   int IdxSig = 0;
   for (int i = 0; i < nSymbols; i++) {
     for (int j = 0; j < ifftSize; j++) {
-      signal_out[IdxSig] = signal_in[IdxSig] / para[j];
+      signal_out[IdxSig] = signal_in[IdxSig] / (para[j] + 4 * pow(10, -15));
       IdxSig++;
     }
   }

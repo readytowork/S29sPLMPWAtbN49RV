@@ -20,6 +20,7 @@ using std::endl;
 
 //Function defined here
 double eval_avg_power(const cvec& symbol_vec);
+void FDE(cvec& signal_in, cvec& signal_out, vec& imp_response, int ifftSize, bool verbose);
 
 int main()
 {
@@ -288,6 +289,51 @@ int main()
     
     } // end ITU channel model
     
+    // FDE fit in
+    if (verbose)
+    {
+    
+    cout << "FDE fit in\n";
+    cvec a = "1 2 3 4 5 6 7 8";
+    a = randn_c(2048);
+    cvec a_ofdm;
+    OFDM ofdm;
+    ofdm.set_parameters(2048, 144);
+    cout << a << endl;
+    ofdm.modulate(a, a_ofdm);
+    cout << a_ofdm << endl;
+    vec ht = "1.000000000000000 0.436232649307735 0.198694326007661";
+    int ch_tap = ht.length();
+    MA_Filter<std::complex<double>, std::complex<double>, std::complex<double> > multipath_channel;
+    multipath_channel.set_coeffs( to_cvec(ht));
+    multipath_channel.set_state(to_cvec( zeros(ch_tap)));
+    cout << a_ofdm << endl;
+    cvec a_ofdm_mult = multipath_channel(a_ofdm);
+    cout << a_ofdm_mult << endl;
+    cvec b;
+    ofdm.demodulate(a_ofdm_mult, b);
+    cout << b << endl;
+    cvec signal_out;
+    FDE(b, signal_out, ht, 2048, true);
+    cout << eval_avg_power(a-signal_out)/eval_avg_power(a) << endl;
+    } // END FDE fit in
+    
+    
+	Punctured_Convolutional_Code code;
+	ivec generator(2);
+	generator(0)=05;
+	generator(1)=02;
+	//generator(2)=0171;
+	code.set_generator_polynomials(generator, 2);
+	bmat puncture_matrix = "1 0;1 1";
+	code.set_puncture_matrix(puncture_matrix);
+	//code.set_truncation_length(30);
+    cout << code.get_rate() << "OKAY\n";
+    bvec testb = "0 1 0 1";
+    bvec testb_en = code.encode(testb);
+    cout << testb_en << endl;
+    cout << code.decode(to_vec(testb_en)) << endl;
+    
     QAM qam16(16);
     bvec testbin = "0 0 0 1 0 1 1 0 0 0 1 1 1 1 0 0 0 0 0 1 1 1 1 1 1";
     cvec testo = qam16.modulate_bits(testbin);
@@ -385,6 +431,24 @@ double eval_avg_power(const cvec& symbol_vec)
     cout << "[M00] " << "Average power = " << average_power << endl;
   }
   return average_power;
+}
+
+void FDE(cvec& signal_in, cvec& signal_out, vec& imp_response, int ifftSize, bool verbose)
+{
+  cvec para = fft(to_cvec(concat(imp_response, zeros(ifftSize-imp_response.length()))));
+  if (verbose) {cout << "para: \n" << para << endl;}
+  
+  int nSymbols = signal_in.length() / ifftSize;
+  it_assert(nSymbols * ifftSize == signal_in.length(), "warning");
+  
+  signal_out = zeros_c(signal_in.length());
+  int IdxSig = 0;
+  for (int i = 0; i < nSymbols; i++) {
+    for (int j = 0; j < ifftSize; j++) {
+      signal_out[IdxSig] = signal_in[IdxSig] / para[j];
+      IdxSig++;
+    }
+  }
 }
 
 
