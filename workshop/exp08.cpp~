@@ -219,7 +219,7 @@ int main( int argc, char* argv[])
 
     //Demodulate the received QPSK symbols into received bits: Layer 1
     
-  const char prefix[] = "star2-1";
+  const char prefix[] = "star2";
   char oFilenameNU[100];
   sprintf( oFilenameNU, "%s%f", prefix, alpha[i]);
   std::ofstream star;

@@ -335,8 +335,7 @@ int main()
     cout << code.decode_tail(to_vec(testb_en)) << endl;
     
     QAM qam16(16);
-    bvec testbin = "0 0 0 0 0 0 0 1 0 0 1 0 0 0 1 1 0 1 0 0 0 1 0 1 0 1 1 0 0 1 1 1 1 0 0 0\
-                            1 0 0 1 1 0 1 0 1 0 1 1 1 1 0 0 1 1 0 1 1 1 1 0 1 1 1 1";
+    bvec testbin = "0 0 0 0 0 0 0 1 0 0 1 0 0 0 1 1 0 1 0 0 0 1 0 1 0 1 1 0 0 1 1 1 1 0 0 0";
     cvec testo = qam16.modulate_bits(testbin);
     cout << testo << endl;
     bvec rcvdtest = qam16.demodulate_bits(testo);
