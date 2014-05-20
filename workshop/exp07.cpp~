@@ -208,7 +208,7 @@ int main( int argc, char* argv[])
     
     cvec FDMtmp;                                                          //B
     FDE(received_symbols_1, FDMtmp, ch_imp_response_real, 2048, false);   //B
-    received_symbols_1 = FDMtmp;                                              //B
+    received_symbols_1 = FDMtmp;                                          //B
     FDE(received_symbols_2, FDMtmp, ch_imp_response_real, 2048, false);   //B
     received_symbols_2 = FDMtmp;       
 

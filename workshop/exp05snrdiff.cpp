@@ -329,10 +329,10 @@ int main()
 	code.set_puncture_matrix(puncture_matrix);
 	//code.set_truncation_length(30);
     cout << code.get_rate() << "OKAY\n";
-    bvec testb = "0 1 0 1";
-    bvec testb_en = code.encode(testb);
+    bvec testb = "0 1 0 1 0 1";
+    bvec testb_en = code.encode_tail(testb);
     cout << testb_en << endl;
-    cout << code.decode(to_vec(testb_en)) << endl;
+    cout << code.decode_tail(to_vec(testb_en)) << endl;
     
     QAM qam16(16);
     bvec testbin = "0 0 0 1 0 1 1 0 0 0 1 1 1 1 0 0 0 0 0 1 1 1 1 1 1";

@@ -3,7 +3,7 @@ Title       : Experiment 07
 Project     : Mtk 5th generation communication system
 Author      : Ming Jie Yang
 Date        : 
-Description : FDE
+Description : FDE + punctured code
               
               
               
@@ -25,7 +25,7 @@ using std::string;
 double eval_avg_power(const cvec& symbol_vec);
 bvec encode(Convolutional_Code& nsc, int constraint_length, const bvec& encoder_input, int blockSize, bool verbose);
 bvec decode(Convolutional_Code& nsc, int constraint_length, const bvec& decoder_input, int blockSize, bool verbose);
-void zero_pad_back(cvec& vec_in, int m_in);
+int zero_pad_back(cvec& vec_in, int m_in);
 void mmse_equalizer_simple(cvec& sig_in, cvec& sig_out, vec& channel_est, double noise_var, bool verbose);
 void FDE(cvec& signal_in, cvec& signal_out, vec& imp_response, int ifftSize, bool verbose);
 
@@ -114,16 +114,26 @@ int main( int argc, char* argv[])
   }
 
   // Declarations for equalizer & NSC coding
+  // set parameters
   ivec gen = "07 05";                                          //octal notation
   int constraint_length = 3;                                   //constraint length
   int blockSize = 64;//permutation length                //encoder output block size
-  // other parameters
   int nb_bits_tail = blockSize / gen.length();                  //encoder input size + tail size
   int nb_bits = nb_bits_tail - (constraint_length - 1);        //encoder block size
   int nb_blocks;                                               //number of blocks
   // Convolutional code
   Convolutional_Code nsc;
   nsc.set_generator_polynomials(gen, constraint_length);
+  
+  // Punctured Convolutional Code
+  Punctured_Convolutional_Code punc_conv_code;
+  ivec generator = "0133 0165 0171";
+  bmat puncture_matrix = "1 1 0; 0 1 1;0 1 0";//1 1; 0 1; 0 1; 0 1; 1 0; 0 1; 1 0";
+  int free_distance = 7; // constraint length
+  punc_conv_code.set_generator_polynomials(generator, free_distance);
+  punc_conv_code.set_puncture_matrix(puncture_matrix);
+  //code.set_truncation_length(30);
+  cout << "Code Rate: " << punc_conv_code.get_rate() << "\n";
 
   //Allocate storage space for the result vector.
   //The "false" argument means "Do not copy the old content of the vector to the new storage area."
@@ -152,8 +162,8 @@ int main( int argc, char* argv[])
     transmitted_bits_2 = randb(Number_of_bits);
 
     //convolutional code encode
-    bvec out_binary_1 = encode(nsc, constraint_length, transmitted_bits_1, blockSize, false);
-    bvec out_binary_2 = encode(nsc, constraint_length, transmitted_bits_2, blockSize, false);
+    bvec out_binary_1 = encode(punc_conv_code, constraint_length, transmitted_bits_1, blockSize, false);
+    bvec out_binary_2 = encode(punc_conv_code, constraint_length, transmitted_bits_2, blockSize, false);
 
     //Modulate the bits to QPSK symbols:
     transmitted_symbols_1 = qpsk.modulate_bits(out_binary_1);
@@ -169,17 +179,12 @@ int main( int argc, char* argv[])
     transmitted_symbols_2 = transmitted_symbols * pow(h2, 0.5);
     
     //OFDM modulate
-    zero_pad_back(transmitted_symbols_1, 2048);
-    zero_pad_back(transmitted_symbols_2, 2048);
+    int n_pad_1 = zero_pad_back(transmitted_symbols_1, 2048);
+    int n_pad_2 = zero_pad_back(transmitted_symbols_2, 2048);
     ofdm.modulate(transmitted_symbols_1, ofdm_symbols_1);
     ofdm.modulate(transmitted_symbols_2, ofdm_symbols_2);
 
     //Set the noise variance of the AWGN channel:
-    //ofdm_symbols_1 = concat(ofdm_symbols_1, zeros_c(2)); //B
-    //ofdm_symbols_2 = concat(ofdm_symbols_2, zeros_c(2)); //B
-    //ofdm_symbols_1 = concat(ofdm_symbols_1, zeros_c(4));   //A
-    //ofdm_symbols_2 = concat(ofdm_symbols_2, zeros_c(4));   //A
-    //cout << "N0: " << N0 << endl;
     awgn_channel.set_noise(N0);
 
     //Up-conversion
@@ -187,40 +192,31 @@ int main( int argc, char* argv[])
     //Run the transmited symbols through the channel using the () operator:
     ofdm_symbols_1 = awgn_channel( multipath_channel( ofdm_symbols_1));
     ofdm_symbols_2 = awgn_channel( multipath_channel( ofdm_symbols_2));
-    //ofdm_symbols_1 = multipath_channel( ofdm_symbols_1);
-    //ofdm_symbols_2 = multipath_channel( ofdm_symbols_2);
-    //ofdm_symbols_1 = awgn_channel( ofdm_symbols_1);
-    //ofdm_symbols_2 = awgn_channel( ofdm_symbols_2);
-    //ofdm_symbols_1 = ofdm_symbols_1.get(0, ofdm_symbols_1.length()-3);    //B
-    //ofdm_symbols_2 = ofdm_symbols_2.get(0, ofdm_symbols_2.length()-3);    //B
-
-    // test zone!! KEEP OUT!! //A
-    /*cvec ofdm_symbols_eqed_tmp;
-    mmse_equalizer_simple(ofdm_symbols_1, ofdm_symbols_eqed_tmp, ch_imp_response_real, N0, false);
-    ofdm_symbols_1 = ofdm_symbols_eqed_tmp;
-    mmse_equalizer_simple(ofdm_symbols_2, ofdm_symbols_eqed_tmp, ch_imp_response_real, N0, false);
-    ofdm_symbols_2 = ofdm_symbols_eqed_tmp;*/
 
     //alpha no greater than 0.5
     //OFDM demodulate
     ofdm.demodulate(ofdm_symbols_1, received_symbols_1);
     ofdm.demodulate(ofdm_symbols_2, received_symbols_2);
     
+    // Frequency Domain Equalizer
     cvec FDMtmp;                                                          //B
     FDE(received_symbols_1, FDMtmp, ch_imp_response_real, 2048, false);   //B
     received_symbols_1 = FDMtmp;                                          //B
     FDE(received_symbols_2, FDMtmp, ch_imp_response_real, 2048, false);   //B
     received_symbols_2 = FDMtmp;       
+    
+    received_symbols_1 = received_symbols_1.get(0,received_symbols_1.length()-1-n_pad_1);
+    received_symbols_2 = received_symbols_2.get(0,received_symbols_2.length()-1-n_pad_2);
 
     //Demodulate the received QPSK symbols into received bits: Layer 1
     received_bits_2 = qpsk.demodulate_bits(received_symbols_2);
-    bvec out_binary_recover_2 = decode(nsc, constraint_length, received_bits_2, blockSize, false);
+    bvec out_binary_recover_2 = decode(punc_conv_code, constraint_length, received_bits_2, blockSize, false);
     
     //Demodulate the received QPSK symbols into received bits: Layer 2
     received_bits_1 = qpsk.demodulate_bits(received_symbols_1);
     feedback_symbols_2 = pow(Ps * (1-alpha(i)) * h1, 0.5) * qpsk.modulate_bits(received_bits_1);
     received_bits_1 = qpsk.demodulate_bits(received_symbols_1 - feedback_symbols_2);
-    bvec out_binary_recover_1 = decode(nsc, constraint_length, received_bits_1, blockSize, false);
+    bvec out_binary_recover_1 = decode(punc_conv_code, constraint_length, received_bits_1, blockSize, false);
 
     //Calculate the bit error rate:
     berc.clear();                               //Clear the bit error rate counter
@@ -301,8 +297,9 @@ double eval_avg_power(const cvec& symbol_vec)
 bvec encode(Convolutional_Code& nsc, int constraint_length, const bvec& encoder_input, int blockSize, bool verbose)
 {
   if (verbose) {cout << "input : " << encoder_input << endl;}
-  
-  int codedLen = 2 * (blockSize + (constraint_length - 1));
+  Punctured_Convolutional_Code& nscc = dynamic_cast<Punctured_Convolutional_Code&>(nsc);
+  //int codedLen = 2 * (blockSize + (constraint_length - 1));
+  int codedLen = nsc.encode_tail(randb(blockSize)).length();
   int nBlocks = encoder_input.length() / blockSize;
   ivec window(blockSize);
   for (int j = 0; j < blockSize; j++) {
@@ -332,7 +329,8 @@ bvec decode(Convolutional_Code& nsc, int constraint_length, const bvec& decoder_
 {
   BPSK mod;
   vec decoder_input_mod = mod.modulate_bits(decoder_input);
-  int codedLen = 2 * (blockSize + (constraint_length - 1));
+  //int codedLen = 2 * (blockSize + (constraint_length - 1));
+  int codedLen = nsc.encode_tail(randb(blockSize)).length();
   int nBlock_rcvd = decoder_input_mod.length() / codedLen;
   if (verbose) {cout << "rcvd number of blocks : " << nBlock_rcvd << endl;}
   
@@ -350,34 +348,28 @@ bvec decode(Convolutional_Code& nsc, int constraint_length, const bvec& decoder_
   }
   
   // Deal with residual sources if remainder exsists
-  vec residual_bits = decoder_input_mod.get(nBlock_rcvd*codedLen, decoder_input_mod.length()-1);
-  nsc.decode_tail( residual_bits, bit_rcvd_tmp);
-  bit_decoded = concat(bit_decoded, bit_rcvd_tmp);
+  if (nBlock_rcvd*codedLen != decoder_input_mod.length()) {
+    vec residual_bits = decoder_input_mod.get(nBlock_rcvd*codedLen, decoder_input_mod.length()-1);
+    nsc.decode_tail(residual_bits, bit_rcvd_tmp);
+    bit_decoded = concat(bit_decoded, bit_rcvd_tmp);
+  }
   
   if (verbose) {cout << "decode output : " << bit_decoded << endl;}
   return bit_decoded;
 }
 
-void zero_pad_back(cvec& vec_in, int m_in)
+int zero_pad_back(cvec& vec_in, int m_in)
 {
   int quotient = vec_in.length() / m_in;
   int n_remainder = (quotient + 1) * m_in - vec_in.length();
   vec_in = concat(vec_in, zeros_c(n_remainder));
+  return n_remainder;
 }
 
 void mmse_equalizer_simple(cvec& sig_in, cvec& sig_out, vec& channel_est, double noise_var, bool verbose)
 {
-    //cvec sig_in = "1 1 2 1 1 2 3 5 8 2 0 0 2 4 5 7 7 7 0 0 1";
-    //sig_in = concat(sig_in, zeros_c(4));
     vec ht = channel_est;
     int ch_tap = ht.length();
-    //MA_Filter<std::complex<double>, std::complex<double>, std::complex<double> > multipath_channel;
-    //multipath_channel.set_coeffs( to_cvec(ht));
-    //multipath_channel.set_state(to_cvec( zeros(ch_tap)));
-    //cvec sig_rcvd = multipath_channel(sig_in);
-    //cout << sig_rcvd << endl;
-    // input ht vec
-    //double noise_var = 0.0158;
     int eq_tap = 7;
     if (verbose) {cout << "ht : " << ht << endl;}
     
@@ -442,7 +434,7 @@ void FDE(cvec& signal_in, cvec& signal_out, vec& imp_response, int ifftSize, boo
   int IdxSig = 0;
   for (int i = 0; i < nSymbols; i++) {
     for (int j = 0; j < ifftSize; j++) {
-      signal_out[IdxSig] = signal_in[IdxSig] / (para[j] + 0);
+      signal_out[IdxSig] = signal_in[IdxSig] / (para[j] + 4 * pow(10, -15));
       IdxSig++;
     }
   }
