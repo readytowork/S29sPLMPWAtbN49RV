@@ -32,7 +32,7 @@ void FDE(cvec& signal_in, cvec& signal_out, vec& imp_response, int ifftSize, boo
 int main( int argc, char* argv[])
 {
   //Arg initial here
-  int Number_of_bits = 2048;
+  int Number_of_bits = 4096;
   
   //Declare basics
   int i;
@@ -217,14 +217,17 @@ int main( int argc, char* argv[])
     received_symbols_1 = received_symbols_1.get(0,received_symbols_1.length()-1-n_pad_1);
     received_symbols_2 = received_symbols_2.get(0,received_symbols_2.length()-1-n_pad_2);
 
-    //Demodulate the received QPSK symbols into received bits: Layer 1
-    
-  const char prefix[] = "star2";
-  char oFilenameNU[100];
-  sprintf( oFilenameNU, "%s%f", prefix, alpha[i]);
-  std::ofstream star;
-  star.open(oFilenameNU);
+    // Record symbols (on constellation plane)
+    bool starLogOn = false;
+    std::ofstream star;
+    if (starLogOn) {
+      const char prefix[] = "star2-1";
+      char oFilenameNU[100];
+      sprintf( oFilenameNU, "%s%f", prefix, alpha[i]);
+      star.open(oFilenameNU);
+    }
   
+    //Demodulate the received QPSK symbols into received bits: Layer 1
     received_bits_2 = mod_1.demodulate_bits(received_symbols_2 / pow(1-alpha(i), 0.5) / pow(Ps, 0.5) / pow(h2, 0.5));
     bvec out_binary_recover_2 = decode(punc_conv_code, constraint_length, received_bits_2, blockSize, false);
     
@@ -233,11 +236,15 @@ int main( int argc, char* argv[])
     feedback_symbols_2 = pow(Ps * (1-alpha(i)) * h1, 0.5) * mod_1.modulate_bits(received_bits_1);
     received_bits_1 = mod_1.demodulate_bits((received_symbols_1-feedback_symbols_2) / pow(alpha(i), 0.5) / pow(Ps, 0.5) / pow(h1, 0.5));
     
-  for (int j=0; j<received_symbols_1.length(); ++j){
-    star << received_symbols_1[j] / pow(1-alpha(i), 0.5) / pow(Ps, 0.5) / pow(h1, 0.5) << "\n";
-  }
-  star.close();
     bvec out_binary_recover_1 = decode(punc_conv_code, constraint_length, received_bits_1, blockSize, false);
+    
+    // record point!
+    if (starLogOn) {
+      for (int j=0; j<received_symbols_1.length(); ++j){
+        star << received_symbols_1[j] / pow(1-alpha(i), 0.5) / pow(Ps, 0.5) / pow(h1, 0.5) << "\n";
+      }
+      star.close();
+    }
 
     //Calculate the bit error rate:
     berc.clear();                               //Clear the bit error rate counter
