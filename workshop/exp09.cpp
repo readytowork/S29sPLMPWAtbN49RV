@@ -1,12 +1,12 @@
 /*
-Title       : Experiment 08
+Title       : Experiment 09
 Project     : Mtk 5th generation communication system
 Author      : Ming Jie Yang
-Date        : 14.05.20
-Description : FDE + punctured code finished
-              This is (should be) the final version implementing and tested functions
-              we'll use in physical layer (SIC) simulation.
-              The system architecture can be found in the report.
+Date        : 14.05.26
+Description : 
+              
+              
+              
               
 Debug       :
 */
@@ -21,7 +21,7 @@ using std::cout;
 using std::endl;
 using std::string;
 
-//Function defined here
+//Function is defined here
 double eval_avg_power(const cvec& symbol_vec);
 bvec encode(Punctured_Convolutional_Code& nsc, int constraint_length, const bvec& encoder_input, int blockSize, bool verbose);
 bvec decode(Punctured_Convolutional_Code& nsc, int constraint_length, const bvec& decoder_input, int blockSize, bool verbose);
@@ -35,17 +35,25 @@ int main( int argc, char* argv[])
   int Number_of_bits = 4096;
   
   //Declare basics
-  int i;
   double Ps, N0, dist_1, dist_2, h1, h2, Eb;
   double EbN0;
   double rcvd_power_1, rcvd_power_2;
   int nFFT, nCylicPrefix;
+  enum MOD_TYPE {MOD_BPSK, MOD_QPSK, MOD_QAM16, MOD_QAM64} mod_1_type, mod_2_type;
+  enum CODE_RATE {R_ONE_THIRD, R_HALF, R_TWO_THIRD, R_FOUR_FIFTH} code_rate;
 
   //Read arg Simple
-  if( argc == 4) {
+  if( argc == 7) {
     Number_of_bits = atoi( argv[1]);
     dist_1 = strtod(argv[2], NULL);
     dist_2 = strtod(argv[3], NULL);
+    mod_1_type = static_cast<MOD_TYPE>(atoi(argv[4]));
+    mod_2_type = static_cast<MOD_TYPE>(atoi(argv[5]));
+    code_rate = static_cast<CODE_RATE>(strtod(argv[6],NULL));
+  }
+  else {
+    cout << "plz check args\n";
+    return 0;
   }
 
   //Declarations of scalars and vectors
@@ -61,7 +69,13 @@ int main( int argc, char* argv[])
   cvec ofdm_symbols_1, ofdm_symbols_2;
 
   // Declarations of classes:
-  QPSK mod_1;                     //The QPSK modulator class
+  PSK mod_bpsk(2);
+  QPSK mod_qpsk;
+  QAM mod_qam16(16);
+  QAM mod_qam64(64);
+  Modulator< std::complex<double> >* mod_1;
+  Modulator< std::complex<double> >* mod_2;
+  //QPSK mod_1;                     //The QPSK modulator class
   //QAM mod_1(16);
   AWGN_Channel awgn_channel;     //The AWGN channel class
   it_file ff;                    //For saving the results to file
@@ -78,6 +92,42 @@ int main( int argc, char* argv[])
   cout << ch_imp_response << endl;
   multipath_channel.set_coeffs( ch_imp_response);
   multipath_channel.set_state(ini_state);//inital state is zero
+  
+  //Assign MCS
+  switch(mod_1_type) {
+    case MOD_BPSK:
+      mod_1 = &mod_bpsk;
+      break;
+    case MOD_QPSK:
+      mod_1 = &mod_qpsk;
+      break;
+    case MOD_QAM16:
+      mod_1 = &mod_qam16;
+      break;
+    case MOD_QAM64: 
+      mod_1 = &mod_qam64;
+      break;
+    default:
+      std::cerr << "undefined modulation type.\n";
+      return 0;
+  }
+  switch(mod_2_type) {
+    case MOD_BPSK:
+      mod_2 = &mod_bpsk;
+      break;
+    case MOD_QPSK:
+      mod_2 = &mod_qpsk;
+      break;
+    case MOD_QAM16:
+      mod_2 = &mod_qam16;
+      break;
+    case MOD_QAM64: 
+      mod_2 = &mod_qam64;
+      break;
+    default:
+      std::cerr << "undefined modulation type.\n";
+      return 0;
+  }
 
   //Reset and start the timer:
   tt.tic();
@@ -160,7 +210,7 @@ int main( int argc, char* argv[])
   ofdm.set_parameters(nFFT, nCylicPrefix);
 
   //Iterate over all EbN0dB values:
-  for (i = 0; i < alpha.length(); i++) {
+  for (int i = 0; i < alpha.length(); i++) {
 
     //Show how the simulation progresses:
     cout << "Now simulating alpha value = " << alpha(i); 
@@ -175,8 +225,8 @@ int main( int argc, char* argv[])
     bvec out_binary_2 = encode(punc_conv_code, constraint_length, transmitted_bits_2, blockSize, false);
 
     //Modulate the bits to QPSK symbols:
-    transmitted_symbols_1 = mod_1.modulate_bits(out_binary_1);
-    transmitted_symbols_2 = mod_1.modulate_bits(out_binary_2);
+    transmitted_symbols_1 = mod_1->modulate_bits(out_binary_1);
+    transmitted_symbols_2 = mod_2->modulate_bits(out_binary_2);
 
     //Multiplex two signals
     transmitted_symbols = transmitted_symbols_1 * pow(alpha(i), 0.5) + transmitted_symbols_2 * pow(1 - alpha(i), 0.5);
@@ -228,13 +278,13 @@ int main( int argc, char* argv[])
     }
   
     //Demodulate the received QPSK symbols into received bits: Layer 1
-    received_bits_2 = mod_1.demodulate_bits(received_symbols_2 / pow(1-alpha(i), 0.5) / pow(Ps, 0.5) / pow(h2, 0.5));
+    received_bits_2 = mod_2->demodulate_bits(received_symbols_2 / pow(1-alpha(i), 0.5) / pow(Ps, 0.5) / pow(h2, 0.5));
     bvec out_binary_recover_2 = decode(punc_conv_code, constraint_length, received_bits_2, blockSize, false);
     
     //Demodulate the received QPSK symbols into received bits: Layer 2
-    received_bits_1 = mod_1.demodulate_bits(received_symbols_1 / pow(1-alpha(i), 0.5) / pow(Ps, 0.5) / pow(h1, 0.5));
-    feedback_symbols_2 = pow(Ps * (1-alpha(i)) * h1, 0.5) * mod_1.modulate_bits(received_bits_1);
-    received_bits_1 = mod_1.demodulate_bits((received_symbols_1-feedback_symbols_2) / pow(alpha(i), 0.5) / pow(Ps, 0.5) / pow(h1, 0.5));
+    received_bits_1 = mod_2->demodulate_bits(received_symbols_1 / pow(1-alpha(i), 0.5) / pow(Ps, 0.5) / pow(h1, 0.5));
+    feedback_symbols_2 = pow(Ps * (1-alpha(i)) * h1, 0.5) * mod_2->modulate_bits(received_bits_1);
+    received_bits_1 = mod_1->demodulate_bits((received_symbols_1-feedback_symbols_2) / pow(alpha(i), 0.5) / pow(Ps, 0.5) / pow(h1, 0.5));
     
     bvec out_binary_recover_1 = decode(punc_conv_code, constraint_length, received_bits_1, blockSize, false);
     

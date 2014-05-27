@@ -2,13 +2,13 @@
 Title       : Experiment 07
 Project     : Mtk 5th generation communication system
 Author      : Ming Jie Yang
-Date        : 
-Description : FDE + punctured code
+Date        : 14.05.20
+Description : FDE + punctured code finished
+              This is (should be) the final version implementing and tested functions
+              we'll use in physical layer (SIC) simulation.
+              The system architecture can be found in the report.
               
-              
-              
-              
-              
+Debug       :
 */
 #include <itpp/itcomm.h>
 #include <ctime>
@@ -61,8 +61,8 @@ int main( int argc, char* argv[])
   cvec ofdm_symbols_1, ofdm_symbols_2;
 
   // Declarations of classes:
-  //QPSK mod_1;                     //The QPSK modulator class
-  QAM mod_1(16);
+  QPSK mod_1;                     //The QPSK modulator class
+  //QAM mod_1(16);
   AWGN_Channel awgn_channel;     //The AWGN channel class
   it_file ff;                    //For saving the results to file
   BERC berc;                     //Used to count the bit errors
@@ -393,6 +393,7 @@ int zero_pad_back(cvec& vec_in, int m_in)
   return n_remainder;
 }
 
+//
 void mmse_equalizer_simple(cvec& sig_in, cvec& sig_out, vec& channel_est, double noise_var, bool verbose)
 {
     vec ht = channel_est;
