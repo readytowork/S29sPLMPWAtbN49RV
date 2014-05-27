@@ -43,13 +43,14 @@ int main( int argc, char* argv[])
   enum CODE_RATE {R_ONE_THIRD, R_HALF, R_TWO_THIRD, R_FOUR_FIFTH} code_rate;
 
   //Read arg Simple
-  if( argc == 6) {
+  if( argc == 8) {
     Number_of_bits = atoi( argv[1]);
     dist_1 = strtod(argv[2], NULL);
     dist_2 = strtod(argv[3], NULL);
     mod_1_type = static_cast<MOD_TYPE>(atoi(argv[4]));
     mod_2_type = static_cast<MOD_TYPE>(atoi(argv[5]));
-    code_rate = static_cast<CODE_RATE>(strtod(argv[6],NULL));
+    code_rate_1 = static_cast<CODE_RATE>(strtod(argv[6],NULL));
+    code_rate_2 = static_cast<CODE_RATE>(strtod(argv[7],NULL));
   }
   else {
     cout << "plz check args\n";
@@ -182,12 +183,31 @@ int main( int argc, char* argv[])
   nsc.set_generator_polynomials(gen, constraint_length);
   
   // Punctured Convolutional Code
-  Punctured_Convolutional_Code punc_conv_code;
-  ivec generator = "0133 0165 0171";
-  bmat puncture_matrix = "1 1 1; 1 1 0; 1 0 0"; // 1/2
+  bmat puncture_matrix;
+//  bmat puncture_matrix = "1 1 1; 1 1 0; 1 0 0"; // 1/2
 //  bmat puncture_matrix = "1 0; 1 0; 1 0"; // 2/3
 //  bmat puncture_matrix = "1 1 0; 1 0 0; 1 0 0"; // 3/4
 //  bmat puncture_matrix = "1 1 0 0 0; 1 0 1 0 0; 1 0 0 1 0"; // 5/6
+  switch (code_rate_1) {
+    case R_ONE_THIRD:
+      std::cerr << "not supported\n";
+      return 0;
+    case R_HALF:
+      puncture_matrix = "1 1 1; 1 1 0; 1 0 0"; // 1/2
+      break;
+    case R_TWO_THIRD:
+      puncture_matrix = "1 0; 1 0; 1 0"; // 2/3
+      break;
+    case R_FOUR_FIFTH:
+      puncture_matrix = "1 1 0; 1 0 0; 1 0 0"; // 3/4
+      break;
+    default:
+      std::cerr << "undefined code rate\n";
+      return 0;
+  }
+  
+  Punctured_Convolutional_Code punc_conv_code;
+  ivec generator = "0133 0165 0171";
   int free_distance = 7; // constraint length
   punc_conv_code.set_generator_polynomials(generator, free_distance);
   punc_conv_code.set_puncture_matrix(puncture_matrix);
