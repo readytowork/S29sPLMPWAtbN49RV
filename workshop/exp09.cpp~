@@ -40,7 +40,7 @@ int main( int argc, char* argv[])
   double rcvd_power_1, rcvd_power_2;
   int nFFT, nCylicPrefix;
   enum MOD_TYPE {MOD_BPSK, MOD_QPSK, MOD_QAM16, MOD_QAM64} mod_1_type, mod_2_type;
-  enum CODE_RATE {R_ONE_THIRD, R_HALF, R_TWO_THIRD, R_FOUR_FIFTH} code_rate;
+  enum CODE_RATE {R_ONE_THIRD, R_HALF, R_TWO_THIRD, R_FOUR_FIFTH} code_rate_1, code_rate_2;
 
   //Read arg Simple
   if( argc == 8) {
@@ -154,7 +154,7 @@ int main( int argc, char* argv[])
   //h1 = pow(dist_1, -4.5);        //Channel gain for receiver 1
   //h2 = pow(dist_2, -4.5);        //
   cout << "h1 = " << h1 << " h2 = " << h2 << endl;
-  alpha = linspace(0.5, 0.0, 21);//Simulate for different weight on power
+  alpha = linspace(0.25, 0.0, 21);//Simulate for different weight on power
   nFFT = 2048;                   //FFT size, default is 2048 LTE-a
   nCylicPrefix = 144;            //Length of Prefix, standard 144 (first prefix is different in real case)
 
@@ -183,7 +183,8 @@ int main( int argc, char* argv[])
   nsc.set_generator_polynomials(gen, constraint_length);
   
   // Punctured Convolutional Code
-  bmat puncture_matrix;
+  bmat puncture_matrix_1;
+  bmat puncture_matrix_2;
 //  bmat puncture_matrix = "1 1 1; 1 1 0; 1 0 0"; // 1/2
 //  bmat puncture_matrix = "1 0; 1 0; 1 0"; // 2/3
 //  bmat puncture_matrix = "1 1 0; 1 0 0; 1 0 0"; // 3/4
@@ -193,26 +194,48 @@ int main( int argc, char* argv[])
       std::cerr << "not supported\n";
       return 0;
     case R_HALF:
-      puncture_matrix = "1 1 1; 1 1 0; 1 0 0"; // 1/2
+      puncture_matrix_1 = "1 1 1; 1 1 0; 1 0 0"; // 1/2
       break;
     case R_TWO_THIRD:
-      puncture_matrix = "1 0; 1 0; 1 0"; // 2/3
+      puncture_matrix_1 = "1 0; 1 0; 1 0"; // 2/3
       break;
     case R_FOUR_FIFTH:
-      puncture_matrix = "1 1 0; 1 0 0; 1 0 0"; // 3/4
+      puncture_matrix_1 = "1 1 0; 1 0 0; 1 0 0"; // 3/4
       break;
     default:
       std::cerr << "undefined code rate\n";
       return 0;
   }
   
-  Punctured_Convolutional_Code punc_conv_code;
+  switch (code_rate_2) {
+    case R_ONE_THIRD:
+      std::cerr << "not supported\n";
+      return 0;
+    case R_HALF:
+      puncture_matrix_2 = "1 1 1; 1 1 0; 1 0 0"; // 1/2
+      break;
+    case R_TWO_THIRD:
+      puncture_matrix_2 = "1 0; 1 0; 1 0"; // 2/3
+      break;
+    case R_FOUR_FIFTH:
+      puncture_matrix_2 = "1 1 0; 1 0 0; 1 0 0"; // 3/4
+      break;
+    default:
+      std::cerr << "undefined code rate\n";
+      return 0;
+  }
+  
+  Punctured_Convolutional_Code punc_conv_code_1;
+  Punctured_Convolutional_Code punc_conv_code_2;
   ivec generator = "0133 0165 0171";
   int free_distance = 7; // constraint length
-  punc_conv_code.set_generator_polynomials(generator, free_distance);
-  punc_conv_code.set_puncture_matrix(puncture_matrix);
+  punc_conv_code_1.set_generator_polynomials(generator, free_distance);
+  punc_conv_code_2.set_generator_polynomials(generator, free_distance);
+  punc_conv_code_1.set_puncture_matrix(puncture_matrix_1);
+  punc_conv_code_2.set_puncture_matrix(puncture_matrix_2);
   //code.set_truncation_length(30);
-  cout << "Code Rate: " << punc_conv_code.get_rate() << "\n";
+  cout << "Code Rate 1: " << punc_conv_code_1.get_rate() << "\n";
+  cout << "Code Rate 2: " << punc_conv_code_2.get_rate() << "\n";
 
   //Allocate storage space for the result vector.
   //The "false" argument means "Do not copy the old content of the vector to the new storage area."
@@ -241,8 +264,13 @@ int main( int argc, char* argv[])
     transmitted_bits_2 = randb(Number_of_bits);
 
     //convolutional code encode
-    bvec out_binary_1 = encode(punc_conv_code, constraint_length, transmitted_bits_1, blockSize, false);
-    bvec out_binary_2 = encode(punc_conv_code, constraint_length, transmitted_bits_2, blockSize, false);
+    bvec out_binary_1 = encode(punc_conv_code_1, constraint_length, transmitted_bits_1, blockSize, false);
+    bvec out_binary_2 = encode(punc_conv_code_2, constraint_length, transmitted_bits_2, blockSize, false);
+    int match_length = 0;
+    if (out_binary_1.size() < out_binary_2.size()) match_length = out_binary_1.size();
+    else match_length = out_binary_2.size();
+    out_binary_1 = out_binary_1.get(0, match_length-1);
+    out_binary_1 = out_binary_1.get(0, match_length-1);
 
     //Modulate the bits to QPSK symbols:
     transmitted_symbols_1 = mod_1->modulate_bits(out_binary_1);
@@ -299,14 +327,14 @@ int main( int argc, char* argv[])
   
     //Demodulate the received QPSK symbols into received bits: Layer 1
     received_bits_2 = mod_2->demodulate_bits(received_symbols_2 / pow(1-alpha(i), 0.5) / pow(Ps, 0.5) / pow(h2, 0.5));
-    bvec out_binary_recover_2 = decode(punc_conv_code, constraint_length, received_bits_2, blockSize, false);
+    bvec out_binary_recover_2 = decode(punc_conv_code_2, constraint_length, received_bits_2, blockSize, false);
     
     //Demodulate the received QPSK symbols into received bits: Layer 2
     received_bits_1 = mod_2->demodulate_bits(received_symbols_1 / pow(1-alpha(i), 0.5) / pow(Ps, 0.5) / pow(h1, 0.5));
     feedback_symbols_2 = pow(Ps * (1-alpha(i)) * h1, 0.5) * mod_2->modulate_bits(received_bits_1);
     received_bits_1 = mod_1->demodulate_bits((received_symbols_1-feedback_symbols_2) / pow(alpha(i), 0.5) / pow(Ps, 0.5) / pow(h1, 0.5));
     
-    bvec out_binary_recover_1 = decode(punc_conv_code, constraint_length, received_bits_1, blockSize, false);
+    bvec out_binary_recover_1 = decode(punc_conv_code_1, constraint_length, received_bits_1, blockSize, false);
     
     // record point!
     if (starLogOn) {
@@ -315,6 +343,8 @@ int main( int argc, char* argv[])
       }
       star.close();
     }
+    //cout << "n1_rcvd: " << out_binary_recover_1.size() << endl;
+    //cout << "n2_rcvd: " << out_binary_recover_2.size() << endl;
 
     //Calculate the bit error rate:
     berc.clear();                               //Clear the bit error rate counter
@@ -352,7 +382,7 @@ int main( int argc, char* argv[])
   cout << endl;
 
   //Save the results to file:
-  const char xFilename[] = "result";
+  const char xFilename[] = "raw/result";
   char oFilename[100];
   int fileIndex = 0;
   strcpy( oFilename, xFilename);
@@ -363,9 +393,20 @@ int main( int argc, char* argv[])
   cout << "Saving results to " << oFilename << endl;
   std::ofstream oo;
   oo.open(oFilename);
-    oo << alpha << endl;
-    oo << bit_error_rate_1 << endl;
-    oo << bit_error_rate_2 << endl;
+  oo << "d1 " << dist_1 << endl;
+  oo << "d2 " << dist_2 << endl;
+  oo << "pl1 " << h1dB << endl;
+  oo << "pl2 " << h2dB << endl;
+  oo << "mod1 " << static_cast<int>(mod_1_type) << endl;
+  oo << "mod1 " << static_cast<int>(mod_2_type) << endl;
+  oo << "rate1 " << punc_conv_code_1.get_rate() << endl;
+  oo << "rate2 " << punc_conv_code_2.get_rate() << endl;
+  oo << "alpha " << "ber1 " << "ber2" << endl;
+  for (int i = 0; i < alpha.size(); i++) {
+    oo << alpha[i] << " ";
+    oo << bit_error_rate_1[i] << " ";
+    oo << bit_error_rate_2[i] << " " << endl;
+  }
   oo.close();
 
   //Exit program:

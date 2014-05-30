@@ -148,22 +148,13 @@ plot(0, 0, '.','Marker', 'x', 'LineWidth', 3, 'Color', 'r'); hold on;
 for i = 1:12
     rot_matrix = [cos(2*pi*rot_factor(i)) -sin(2*pi*rot_factor(i)); sin(2*pi*rot_factor(i)) cos(2*pi*rot_factor(i))];
     UE_new = UE(i,:)*rot_matrix;
-    p_handle(i) = plot(UE_new(1), UE_new(2), '.','Marker', 'o', 'LineWidth', 3, 'Color', 'b');
+    p_habdle = plot(UE_new(1), UE_new(2), '.','Marker', 'o', 'LineWidth', 3, 'Color', 'b');
     text(UE_new(1), UE_new(2), labels{i}, 'VerticalAlignment','bottom', ...
                              'HorizontalAlignment','right','FontSize',14,'FontWeight','bold')
     hold on;
-    l_handle(i) = line([UE_new(1) 0], [UE_new(2) 0]);
 end
 axis equal
 set(gca,'fontsize',14);
-% best_cs = {[sort_idx(1) sort_idx(12)] [sort_idx(2) sort_idx(11)] [sort_idx(3) sort_idx(10)] [sort_idx(4) sort_idx(9)] [sort_idx(5) sort_idx(8)] [sort_idx(6) sort_idx(7)]};
-colormap = hsv(length(best_cs));
-for i = 1:length(best_cs)
-    set(p_handle(best_cs{i}(1)), 'Color', colormap(i,:));
-    set(p_handle(best_cs{i}(2)), 'Color', colormap(i,:));
-    set(l_handle(best_cs{i}(1)), 'Color', colormap(i,:));
-    set(l_handle(best_cs{i}(2)), 'Color', colormap(i,:));
-end
 xlabel('(m)','FontSize',14,'Color','k');
 ylabel('(m)','FontSize',14,'Color','k');
 grid on;
