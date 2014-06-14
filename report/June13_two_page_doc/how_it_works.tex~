@@ -1,5 +1,14 @@
 \section{How it works}
 \label{sec_how_it_works}
+
+\begin{figure}[t]
+\begin{center}
+\includegraphics[width=1.0\columnwidth ,angle=0]{figure/systemArch.png}
+\caption{simulation architecture}
+\label{fig_sys_arch}
+\end{center}
+\end{figure}
+
 The physical layer simulation is constructed by the system architecture 
 shown in Fig.~\ref{fig_sys_arch}.
 In this system, the receiver can only extract two layer of multiplexed data.
@@ -80,14 +89,6 @@ Pairs of users are painted with different color.
 \caption{\label{alg_my} Scheduling transmission pairs iteratively}
 \end{algorithm}
 }
-
-\begin{figure}[t]
-\begin{center}
-\includegraphics[width=1.0\columnwidth ,angle=0]{figure/systemArch.png}
-\caption{simulation architecture}
-\label{fig_sys_arch}
-\end{center}
-\end{figure}
 
 \begin{figure}[t]
 \begin{center}
