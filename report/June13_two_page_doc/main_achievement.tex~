@@ -1,0 +1,14 @@
+\section{Main achievement}
+\label{sec_main_achievement}
+We have built a physical-layer simulation platform for single-
+antenna NOMA with consideration of modulation, channel coding,
+and multipath channels based on SIC.
+We have obtained the desired MCS/BER model for two-user
+NOMA in the two-stage decoding scheme for further investigation
+on MCS selection, power allocation, and user pairing at the MAC
+layer.
+We have investigated a simple scheduling algorithm for pairing
+users in each OFDM resource block such that the BERs of all
+users can satisfy the desired constraint (through proper MCS
+selection) while achieving performance gain in the sum rate.
+

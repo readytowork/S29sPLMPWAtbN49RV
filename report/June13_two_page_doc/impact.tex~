@@ -1,0 +1,11 @@
+\section{Impact}
+\label{sec_impact}
+We have found that a 20\% performance gain in the (weighted) sum
+rate can be achieved when the paired users have a path-loss ratio
+of 10. The performance gain increases as the difference in the
+channel condition (path loss) keeps increasing.
+Best MCS for two-user NOMA based on the obtained MCS/BER model 
+for two-user NOMA (right figure), the proposed scheduling algorithm 
+can pair users with 91.67\% optimality (for a 12-user downlink scenario)
+without incurring the complexity needed in exhaustive search.
+
