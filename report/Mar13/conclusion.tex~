@@ -1,9 +1,0 @@
-\section{Conclusion}
-\label{sec_conclusion}
-We've surveyed models for NOMA with SIC in OFDM system form the
-prior work. However, according to the scope of project, there are
-some part remains unclear. For example, inter-cell interference
-is neglected, and we have not found sufficient literature about
-uplink MIMO-SIC model and coordinate muti-point (COMP) access
-model. 
-
