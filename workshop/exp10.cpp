@@ -38,12 +38,13 @@ int main( int argc, char* argv[])
   double Ps, N0, dist_1, dist_2, h1, h2, Eb;
   double EbN0;
   double rcvd_power_1, rcvd_power_2;
+  double alpha_min, alpha_num, alpha_max;
   int nFFT, nCylicPrefix;
   enum MOD_TYPE {MOD_BPSK, MOD_QPSK, MOD_QAM16, MOD_QAM64} mod_1_type, mod_2_type;
   enum CODE_RATE {R_ONE_THIRD, R_HALF, R_TWO_THIRD, R_FOUR_FIFTH} code_rate_1, code_rate_2;
 
   //Read arg Simple
-  if( argc == 8) {
+  if( argc == 11) {
     Number_of_bits = atoi( argv[1]);
     dist_1 = strtod(argv[2], NULL);
     dist_2 = strtod(argv[3], NULL);
@@ -51,6 +52,9 @@ int main( int argc, char* argv[])
     mod_2_type = static_cast<MOD_TYPE>(atoi(argv[5]));
     code_rate_1 = static_cast<CODE_RATE>(strtod(argv[6],NULL));
     code_rate_2 = static_cast<CODE_RATE>(strtod(argv[7],NULL));
+    alpha_min = strtod(argv[8], NULL);
+    alpha_max = strtod(argv[9], NULL);
+    alpha_num = strtod(argv[10], NULL);
   }
   else {
     cout << "plz check args\n";
@@ -154,7 +158,7 @@ int main( int argc, char* argv[])
   //h1 = pow(dist_1, -4.5);        //Channel gain for receiver 1
   //h2 = pow(dist_2, -4.5);        //
   cout << "h1 = " << h1 << " h2 = " << h2 << endl;
-  alpha = linspace(0.25, 0.0, 21);//Simulate for different weight on power
+  alpha = linspace(alpha_max, alpha_min, alpha_num);//Simulate for different weight on power
   nFFT = 2048;                   //FFT size, default is 2048 LTE-a
   nCylicPrefix = 144;            //Length of Prefix, standard 144 (first prefix is different in real case)
 
@@ -382,7 +386,7 @@ int main( int argc, char* argv[])
   cout << endl;
 
   //Save the results to file:
-  const char xFilename[] = "raw/result";
+  const char xFilename[] = "test/result";
   char oFilename[100];
   int fileIndex = 0;
   strcpy( oFilename, xFilename);
